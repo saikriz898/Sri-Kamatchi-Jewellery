@@ -1,0 +1,21 @@
+{
+  "name": "ஸ்ரீ காமாட்சி நகை நிலையம்",
+  "short_name": "SKJM",
+  "description": "ஸ்ரீ காமாட்சி நகை நிலையம்",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050402",
+  "theme_color": "#050402",
+  "icons": [
+    {
+      "src": "/Logo-main.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Logo-main.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
