@@ -42,11 +42,8 @@ export function useJewelryStudio() {
       const data = await res.json();
       const apiBase = API_URL.replace(/\/$/, '');
       const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string }) => {
-        const url = img.compressedUrl || img.imageUrl || '';
-        if (!url) return '';
-        if (url.startsWith('http')) return url;
-        if (url.startsWith('/')) return `${apiBase}${url}`;
-        return `${apiBase}/${url}`;
+        const url = img.compressedUrl || img.imageUrl || "";
+        return url; // Use relative paths to allow Next.js rewrites to handle proxying
       }).filter((url: string) => Boolean(url));
       setStoredImages(imgs);
       setTotalImages(data.pagination?.total || imgs.length);
@@ -241,10 +238,9 @@ export function useJewelryStudio() {
         const data = await res.json();
         const urls = new Set<string>();
         if (data.files) {
-          const apiBase = API_URL.replace(/\/$/, '');
           data.files.forEach((f: any) => {
-            if (f.compressedUrl) urls.add(f.compressedUrl.startsWith('http') ? f.compressedUrl : `${apiBase}${f.compressedUrl}`);
-            if (f.imageUrl) urls.add(f.imageUrl.startsWith('http') ? f.imageUrl : `${apiBase}${f.imageUrl}`);
+            if (f.compressedUrl) urls.add(f.compressedUrl);
+            if (f.imageUrl) urls.add(f.imageUrl);
           });
         }
         setSessionUploads(prev => new Set([...prev, ...urls]));
