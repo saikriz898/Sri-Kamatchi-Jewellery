@@ -6,7 +6,7 @@ module.exports = {
   init: (httpServer) => {
     io = new Server(httpServer, {
       cors: {
-        origin: (origin, callback) => callback(null, true),
+        origin: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true,
       },

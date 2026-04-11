@@ -19,9 +19,9 @@ app.use(compression());
 socketManager.init(server);
 
 app.use(cors({
-  origin: (origin, callback) => callback(null, true),
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true,
 }));
 
