@@ -30,8 +30,8 @@ export const metadata: Metadata = {
   description: "Sri Kamatchi Jewellery - Daily Rate Poster Studio",
   manifest: "/manifest.json",
   icons: {
-    icon: "/Logo-main.png",
-    apple: "/Logo-main.png",
+    icon: "/Logo_top.png",
+    apple: "/Logo_top.png",
   },
   appleWebApp: {
     capable: true,
