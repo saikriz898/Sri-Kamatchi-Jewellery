@@ -73,6 +73,7 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
           className="absolute inset-0 h-full w-full object-cover object-center"
           loading="eager"
           decoding="sync"
+          crossOrigin="anonymous"
         />
       ) : (
         <div
