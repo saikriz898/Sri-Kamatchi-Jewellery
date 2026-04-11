@@ -16,7 +16,7 @@ interface MobileEditorProps {
   isDownloading: boolean;
   isSharing: boolean;
   isExportEnabled: boolean;
-  notification: { message: string, type: 'success' | 'error' | 'warning' } | null;
+  notification: { message: string; type: 'success' | 'error' | 'warning' } | null;
   priceDropNote: string;
   setPriceDropNote: (note: string) => void;
   metalMode: 'gold' | 'silver';
@@ -51,8 +51,7 @@ export default function MobileEditor({
   isGenerating, isDownloading, isSharing, isExportEnabled, isSyncing,
   notification, priceDropNote, setPriceDropNote,
   metalMode, setMetalMode, date, setDate,
-  posterRef, handleGenerate, handleDownload,
-  handleShare, onBackToGenerate, handleReset, handleSyncDB,
+  posterRef, handleGenerate, handleDownload, handleShare, onBackToGenerate, handleReset, handleSyncDB,
   images, sessionUploads, onSelectImage, onDeleteImage, isLoadingImages, imageError,
   onUploadPhotos, isUploadingPhotos,
   currentIndex, totalImages, currentPage, totalPages, goToPage,
@@ -60,97 +59,96 @@ export default function MobileEditor({
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
 
   return (
-    <div className="fixed inset-0 flex flex-col pt-safe bg-[#0A0A0A] overflow-hidden">
-      {/* Mobile Header Component */}
+    <div className="fixed inset-0 flex flex-col bg-[#0A0A0A] overflow-hidden">
       <MobileHeader
         logoImg="/Logo-main.png"
         metalMode={metalMode}
         setMetalMode={setMetalMode}
       />
 
-      {/* Dynamic Content Area */}
       <main className={`flex-1 w-full relative overflow-y-auto overflow-x-hidden px-4 pb-safe custom-scrollbar ${activeTab === 'preview' ? 'pt-2' : 'pt-4'}`}>
         {activeTab === 'preview' ? (
-          /* Preview View — Full Page Style */
-          <div className="flex flex-col items-center animate-fade-in py-2 pb-40 min-h-full">
-            <div className="relative flex items-center justify-center w-full mb-10 overflow-visible">
-              <div className="transform origin-top scale-[0.85] sm:scale-[1.0] transition-transform duration-500 flex items-center justify-center">
-                <PosterCanvas
-                  ref={posterRef}
-                  rates={rates}
-                  imageUrl={currentImage}
-                  date={date}
-                  isExporting={isDownloading || isSharing}
-                />
-              </div>
+          <div className="flex flex-col items-center py-2 pb-40 min-h-full">
+            <div className="w-full flex items-center justify-center mb-6">
+              <PosterCanvas
+                ref={posterRef}
+                rates={rates}
+                imageUrl={currentImage}
+                date={date}
+                isExporting={isDownloading || isSharing}
+              />
             </div>
 
-            <div className="flex flex-col items-center w-full max-w-[405px] mt-2 mb-12 relative z-10 px-2">
+            <div className="flex flex-col items-center w-full max-w-[405px] px-2 gap-3">
               {!isExportEnabled ? (
                 <>
                   <button
                     type="button"
                     onClick={handleGenerate}
                     disabled={isGenerating}
-                    className="mb-8 w-full bg-gradient-to-br from-[#b8860b] via-[#d4af37] to-[#7a5a07] text-black font-cinzel font-black py-5 rounded-2xl flex items-center justify-center gap-2 text-[13px] shadow-2xl shadow-yellow-900/30 active:scale-95 transition-transform disabled:opacity-40"
+                    className="w-full bg-gradient-to-br from-[#b8860b] via-[#d4af37] to-[#7a5a07] text-black font-black py-5 rounded-2xl flex items-center justify-center gap-2 text-[13px] shadow-2xl shadow-yellow-900/30 active:scale-95 transition-transform disabled:opacity-40"
                   >
                     {isGenerating ? 'GENERATING...' : '✨ GENERATE MASTERPIECE'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab('edit')}
-                    className="text-[12px] font-cinzel font-black tracking-[0.3em] uppercase text-yellow-400/50 bg-transparent py-3"
+                    className="text-[12px] font-black tracking-[0.3em] uppercase text-yellow-400/50 py-3"
                   >
                     Return to Settings
                   </button>
                 </>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-4 w-full mb-6">
+                  <div className="grid grid-cols-2 gap-4 w-full">
                     <button
                       onClick={handleDownload}
                       disabled={isDownloading}
-                      className="btn-gold py-5 rounded-2xl flex items-center justify-center gap-2 text-[13px] shadow-2xl shadow-yellow-900/30 active:scale-95 transition-transform disabled:opacity-40"
+                      className="py-5 rounded-2xl flex items-center justify-center gap-2 text-[13px] font-black border border-yellow-500/40 text-yellow-400 bg-yellow-500/5 active:scale-95 transition-transform disabled:opacity-40"
                     >
                       {isDownloading ? 'SAVING...' : '💾 DOWNLOAD'}
                     </button>
                     <button
                       onClick={handleShare}
                       disabled={isSharing}
-                      className="bg-green-600/10 border-2 border-green-600/50 text-green-500 font-cinzel font-black py-5 rounded-2xl flex items-center justify-center gap-2 text-[13px] active:scale-95 transition-transform disabled:opacity-40"
+                      className="bg-green-600/10 border-2 border-green-600/50 text-green-500 font-black py-5 rounded-2xl flex items-center justify-center gap-2 text-[13px] active:scale-95 transition-transform disabled:opacity-40"
                     >
                       {isSharing ? 'SENDING...' : '📲 WHATSAPP'}
                     </button>
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      onBackToGenerate();
-                      setActiveTab('edit');
-                    }}
-                    className="w-full text-[12px] font-cinzel font-black tracking-[0.3em] uppercase text-yellow-500/70 bg-yellow-400/5 border border-yellow-400/20 px-8 py-3 rounded-xl active:scale-95 transition-all shadow-[0_0_20px_rgba(184,134,11,0.1)] hover:bg-yellow-400/10"
+                    onClick={() => { onBackToGenerate(); setActiveTab('edit'); }}
+                    className="w-full text-[12px] font-black tracking-[0.3em] uppercase text-yellow-500/70 bg-yellow-400/5 border border-yellow-400/20 px-8 py-3 rounded-xl active:scale-95 transition-all"
                   >
                     ← Back to Generation
                   </button>
                 </>
               )}
-              <p className="mt-8 text-[11px] font-playfair italic text-yellow-900/50 text-center uppercase tracking-[0.3em] opacity-60">Optimized for 9:16 High-Res Status</p>
             </div>
           </div>
         ) : (
-          /* Editor View */
           <div className="animate-fade-in max-w-lg mx-auto">
             <MobileControlPanel
               rates={rates}
               setGoldPrice={setGoldPrice}
               setGold8Price={setGold8Price}
               setSilverPrice={setSilverPrice}
-              date={date} setDate={setDate}
-              priceDropNote={priceDropNote} setPriceDropNote={setPriceDropNote}
-              onGenerate={handleGenerate} onDownload={handleDownload}
-              onShare={handleShare} onBackToGenerate={onBackToGenerate} onReset={handleReset} onSyncDB={handleSyncDB}
-              isGenerating={isGenerating} isDownloading={isDownloading}
-              isSharing={isSharing} isExportEnabled={isExportEnabled} isSyncing={isSyncing}
+              date={date}
+              setDate={setDate}
+              priceDropNote={priceDropNote}
+              setPriceDropNote={setPriceDropNote}
+              onGenerate={handleGenerate}
+              onDownload={handleDownload}
+              onShare={handleShare}
+              onBackToGenerate={onBackToGenerate}
+              onReset={handleReset}
+              onSyncDB={handleSyncDB}
+              isGenerating={isGenerating}
+              isDownloading={isDownloading}
+              isSharing={isSharing}
+              isExportEnabled={isExportEnabled}
+              isSyncing={isSyncing}
               images={images}
               sessionUploads={sessionUploads}
               currentImage={currentImage}
@@ -170,7 +168,6 @@ export default function MobileEditor({
         )}
       </main>
 
-      {/* Bottom Navigation Component */}
       <MobileBottomNavbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -178,16 +175,16 @@ export default function MobileEditor({
         isGenerating={isGenerating}
       />
 
-      {/* Mobile Toast Notification Overlay */}
       {notification && (
-        <div className="fixed top-20 right-4 z-[60] w-[80%] max-w-xs animate-in fade-in slide-in-from-right-4 duration-300">
-          <div className={`px-5 py-3.5 rounded-2xl flex items-center gap-3 backdrop-blur-xl border shadow-2xl ${notification.type === 'error'
+        <div className="fixed top-20 right-4 z-[60] w-[80%] max-w-xs">
+          <div className={`px-5 py-3.5 rounded-2xl flex items-center gap-3 backdrop-blur-xl border shadow-2xl ${
+            notification.type === 'error'
               ? 'bg-red-950/90 border-red-500/40 text-red-100'
               : notification.type === 'warning'
                 ? 'bg-yellow-950/90 border-yellow-500/40 text-yellow-100'
                 : 'bg-[#1a1008]/95 border-yellow-500/40 text-yellow-400'
-            }`}>
-            <span className="font-cinzel text-xs font-bold tracking-widest">{notification.message}</span>
+          }`}>
+            <span className="text-xs font-bold tracking-widest">{notification.message}</span>
           </div>
         </div>
       )}

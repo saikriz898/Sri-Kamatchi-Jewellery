@@ -59,8 +59,8 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
       id="poster-canvas-area"
       className={`relative overflow-hidden text-white ${isExporting ? 'rounded-none' : 'rounded-2xl'}`}
       style={{
-        height: '85vh',
-        width: 'calc(85vh * 9 / 16)',
+        width: 'min(calc(85vh * 9 / 16), 90vw)',
+        height: 'calc(min(calc(85vh * 9 / 16), 90vw) * 16 / 9)',
         aspectRatio: '9 / 16',
         background: '#120803',
         fontFamily: CINZEL,

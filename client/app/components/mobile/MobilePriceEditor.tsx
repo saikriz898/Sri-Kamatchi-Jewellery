@@ -7,17 +7,14 @@ interface MobilePriceEditorProps {
   setSilverPrice: (val: string) => void;
   date: string;
   setDate: (date: string) => void;
-  priceDropNote: string;
-  setPriceDropNote: (note: string) => void;
 }
 
 export default function MobilePriceEditor({
   rates, setGoldPrice, setGold8Price, setSilverPrice, date, setDate
-}: Omit<MobilePriceEditorProps, 'priceDropNote' | 'setPriceDropNote'>) {
+}: MobilePriceEditorProps) {
   return (
     <div className="flex flex-col gap-1">
 
-      {/* Section Header */}
       <div className="flex items-center gap-2 mb-3">
         <div className="w-1 h-1 rounded-full bg-[#b8860b]" />
         <span className="text-[9px] font-black tracking-[0.3em] uppercase text-white/30">Market Ledger</span>
@@ -25,10 +22,8 @@ export default function MobilePriceEditor({
         <span className="text-[8px] font-bold text-[#b8860b]/50 tracking-widest uppercase">Live</span>
       </div>
 
-      {/* Card */}
       <div className="bg-[#0a0907] border border-white/[0.04] rounded-2xl p-4 space-y-3">
 
-        {/* Date Row */}
         <div className="flex items-center gap-3">
           <span className="text-[8px] font-black tracking-[0.2em] uppercase text-white/20 w-16 shrink-0">Date</span>
           <div className="flex-1 relative">
@@ -42,10 +37,8 @@ export default function MobilePriceEditor({
           </div>
         </div>
 
-        {/* Divider */}
         <div className="h-px bg-white/[0.04]" />
 
-        {/* Gold 1G Row */}
         <div className="flex items-center gap-3">
           <span className="text-[8px] font-black tracking-[0.15em] uppercase text-[#b8860b]/50 w-16 shrink-0 leading-tight">22K Gold<br/>1 Gram</span>
           <div className="flex-1 relative">
@@ -60,7 +53,6 @@ export default function MobilePriceEditor({
           </div>
         </div>
 
-        {/* Gold 8G Row */}
         <div className="flex items-center gap-3">
           <span className="text-[8px] font-black tracking-[0.15em] uppercase text-[#b8860b]/50 w-16 shrink-0 leading-tight">22K Gold<br/>8 Gram</span>
           <div className="flex-1 relative">
@@ -69,16 +61,15 @@ export default function MobilePriceEditor({
               type="text"
               value={rates.gold8g}
               onChange={(e) => setGold8Price(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl pl-7 pr-3 py-2 text-[12px] font-mono font-bold text-white/80 focus:outline-none focus:border-[#b8860b]/30 transition-all placeholder:text-white/10"
+              className="w-full bg-white/[0.02] border border-white/[0.04] rounded-xl pl-7 pr-3 py-2 text-[12px] font-mono font-bold text-white/40 cursor-not-allowed placeholder:text-white/10"
               placeholder="0,00,000"
+              readOnly
             />
           </div>
         </div>
 
-        {/* Divider */}
         <div className="h-px bg-white/[0.04]" />
 
-        {/* Silver Row */}
         <div className="flex items-center gap-3">
           <span className="text-[8px] font-black tracking-[0.15em] uppercase text-white/20 w-16 shrink-0 leading-tight">Silver<br/>1 Gram</span>
           <div className="flex-1 relative">

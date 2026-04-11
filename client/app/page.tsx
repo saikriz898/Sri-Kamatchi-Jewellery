@@ -32,7 +32,7 @@ export default function Home() {
     showToast
   } = useJewelryStudio();
 
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const posterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,6 +96,8 @@ export default function Home() {
       setIsSharing(false);
     }
   };
+
+  if (isMobile === null) return null;
 
   if (isMobile) {
     return (
