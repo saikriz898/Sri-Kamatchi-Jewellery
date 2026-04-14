@@ -17,8 +17,6 @@ interface MobileEditorProps {
   isSharing: boolean;
   isExportEnabled: boolean;
   notification: { message: string; type: 'success' | 'error' | 'warning' } | null;
-  priceDropNote: string;
-  setPriceDropNote: (note: string) => void;
   metalMode: 'gold' | 'silver';
   setMetalMode: (mode: 'gold' | 'silver') => void;
   date: string;
@@ -49,7 +47,7 @@ interface MobileEditorProps {
 export default function MobileEditor({
   currentImage, rates, setGoldPrice, setGold8Price, setSilverPrice,
   isGenerating, isDownloading, isSharing, isExportEnabled, isSyncing,
-  notification, priceDropNote, setPriceDropNote,
+  notification, 
   metalMode, setMetalMode, date, setDate,
   posterRef, handleGenerate, handleDownload, handleShare, onBackToGenerate, handleReset, handleSyncDB,
   images, sessionUploads, onSelectImage, onDeleteImage, isLoadingImages, imageError,
@@ -136,8 +134,6 @@ export default function MobileEditor({
               setSilverPrice={setSilverPrice}
               date={date}
               setDate={setDate}
-              priceDropNote={priceDropNote}
-              setPriceDropNote={setPriceDropNote}
               onGenerate={handleGenerate}
               onDownload={handleDownload}
               onShare={handleShare}

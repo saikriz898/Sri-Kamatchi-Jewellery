@@ -8,7 +8,6 @@ export function useJewelryStudio() {
 
   const [rates, setRates] = useState({ gold1g: "", gold8g: "", silver1g: "" });
   const [date, setDate] = useState(new Date().toLocaleDateString('en-GB'));
-  const [priceDropNote, setPriceDropNote] = useState("தங்கத்தின் விலை கிராமுக்கு -33");
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [totalImages, setTotalImages] = useState(0);
   const [storedImages, setStoredImages] = useState<string[]>([]);
@@ -68,9 +67,30 @@ export function useJewelryStudio() {
     const controller = new AbortController();
     async function hydrate() {
       try {
+        // Fetch Studio State (Index)
         const stateRes = await fetch(`${API_URL}/api/studio-state`, { signal: controller.signal }).then(r => r.json());
         if (stateRes?.currentIndex !== undefined) setCurrentIndex(stateRes.currentIndex);
         if (stateRes?.total !== undefined) setTotalImages(stateRes.total);
+
+        // Fetch Latest Prices from the Vault
+        const priceRes = await fetch(`${API_URL}/api/prices/latest`, { signal: controller.signal }).then(r => r.json());
+        if (priceRes?.gold1g) {
+          setRates({
+            gold1g: priceRes.gold1g,
+            gold8g: priceRes.gold8g,
+            silver1g: priceRes.silver1g
+          });
+
+          const today = new Date().toLocaleDateString('en-GB');
+          // Only use the DB date if it matches today's date (active session).
+          // Otherwise, default to Today's date automatically.
+          if (priceRes.date && priceRes.date === today) {
+            setDate(priceRes.date);
+          } else {
+            setDate(today);
+          }
+        }
+
         await refreshAssets();
       } catch (err: unknown) {
         if (err instanceof Error && err.name !== 'AbortError') console.warn("Server unavailable, using local state", err);
@@ -85,10 +105,18 @@ export function useJewelryStudio() {
     try {
       const savedRates = window.localStorage.getItem('jewelry-rates');
       const savedDate = window.localStorage.getItem('jewelry-price-date');
-      const savedNote = window.localStorage.getItem('jewelry-price-note');
+      const savedUpdatedAt = window.localStorage.getItem('jewelry-price-updated-at');
       if (savedRates) setRates(JSON.parse(savedRates));
-      if (savedDate) setDate(savedDate);
-      if (savedNote) setPriceDropNote(savedNote);
+
+      const today = new Date().toLocaleDateString('en-GB');
+      const todayTimestamp = new Date().toDateString();
+      // Respect manual change only if it's for today. 
+      // If it's a new day, auto-reset to today.
+      if (savedDate && savedUpdatedAt === todayTimestamp) {
+        setDate(savedDate);
+      } else {
+        setDate(today);
+      }
     } catch (err) {
       console.warn('Failed to load local price state:', err);
     }
@@ -99,11 +127,11 @@ export function useJewelryStudio() {
     try {
       window.localStorage.setItem('jewelry-rates', JSON.stringify(rates));
       window.localStorage.setItem('jewelry-price-date', date);
-      window.localStorage.setItem('jewelry-price-note', priceDropNote);
+      window.localStorage.setItem('jewelry-price-updated-at', new Date().toDateString());
     } catch (err) {
       console.warn('Failed to save local price state:', err);
     }
-  }, [rates, date, priceDropNote]);
+  }, [rates, date]);
 
   // Single socket connection
   useEffect(() => {
@@ -141,8 +169,18 @@ export function useJewelryStudio() {
     socket.on('reconnect', handleReconnect);
     socket.on('reconnect_failed', handleReconnectFailed);
 
-    // Do not overwrite local rate edits from remote real-time updates.
-    // Price remains local-only, but image usage is shared across sessions.
+    // Listen for remote real-time price updates
+    socket.on('priceUpdate', (data) => {
+      if (data) {
+        setRates({
+          gold1g: data.gold1g,
+          gold8g: data.gold8g,
+          silver1g: data.silver1g
+        });
+        if (data.date) setDate(data.date);
+      }
+    });
+
     socket.on('stateUpdate', (data) => {
       if (data?.currentIndex !== undefined) setCurrentIndex(data.currentIndex);
       if (data?.total !== undefined) setTotalImages(data.total);
@@ -163,6 +201,7 @@ export function useJewelryStudio() {
       socket.off('connect_error', handleConnectError);
       socket.off('reconnect', handleReconnect);
       socket.off('reconnect_failed', handleReconnectFailed);
+      socket.off('priceUpdate');
       socket.off('stateUpdate');
       socket.off('libraryUpdate');
       socket.off('uploadProgress');
@@ -176,7 +215,7 @@ export function useJewelryStudio() {
     const numVal = parseFloat(val.replace(/,/g, ''));
     const gold8gVal = !isNaN(numVal) ? (numVal * 8).toString() : "";
     setRates(prev => ({
-      ...prev, 
+      ...prev,
       gold1g: val,
       gold8g: gold8gVal
     }));
@@ -207,7 +246,19 @@ export function useJewelryStudio() {
     setCurrentIndex(nextIdx);
     setIsExportEnabled(true);
     setIsGenerating(false);
-    showToast("Poster Generated", 'success');
+
+    // Lock in the rates to the DB and broadcast to all devices
+    try {
+      await fetch(`${API_URL}/api/price`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...rates, date })
+      });
+    } catch (err) {
+      console.error("Failed to sync rates to DB:", err);
+    }
+
+    showToast("Poster Generated & Synced", 'success');
   };
 
   const handleSyncDB = async () => {
@@ -327,7 +378,6 @@ export function useJewelryStudio() {
   return {
     rates, setGoldPrice, setGold8Price, setSilverPrice,
     date, setDate,
-    priceDropNote, setPriceDropNote,
     currentImage,
     currentIndex, totalImages,
     storedImages, sessionUploads,

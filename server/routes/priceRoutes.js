@@ -20,14 +20,14 @@ router.get('/price', async (req, res) => {
 // POST /api/price — always upsert single row
 router.post('/price', async (req, res) => {
   try {
-    const { gold1g, gold8g, silver1g, date, priceDropNote } = req.body;
+    const { gold1g, gold8g, silver1g, date } = req.body;
 
     // Delete all old rows, insert fresh one — simple single-row upsert
     await pool.query('DELETE FROM prices');
     const { rows } = await pool.query(
-      `INSERT INTO prices (gold1g, gold8g, silver1g, date, price_drop_note, updated_at)
-       VALUES ($1,$2,$3,$4,$5,NOW()) RETURNING *`,
-      [gold1g || '', gold8g || '', silver1g || '', date || '', priceDropNote || '']
+      `INSERT INTO prices (gold1g, gold8g, silver1g, date, updated_at)
+       VALUES ($1,$2,$3,$4,NOW()) RETURNING *`,
+      [gold1g || '', gold8g || '', silver1g || '', date || '']
     );
     const price = rows[0];
     emitSafe('priceUpdate', price);

@@ -13,8 +13,6 @@ interface PriceEditorProps {
   setSilverPrice: (val: string) => void;
   date: string;
   setDate: (val: string) => void;
-  priceDropNote: string;
-  setPriceDropNote: (val: string) => void;
   activeMetal: 'gold' | 'silver';
   setActiveMetal: (val: 'gold' | 'silver') => void;
   storedImages: string[];

@@ -20,8 +20,6 @@ interface MobileControlPanelProps {
   setSilverPrice: (val: string) => void;
   date: string;
   setDate: (date: string) => void;
-  priceDropNote: string;
-  setPriceDropNote: (note: string) => void;
   onGenerate: () => void;
   onDownload: () => void;
   onShare: () => void;
@@ -50,7 +48,7 @@ interface MobileControlPanelProps {
 }
 
 export default function MobileControlPanel({
-  rates, setGoldPrice, setGold8Price, setSilverPrice, date, setDate, priceDropNote, setPriceDropNote,
+  rates, setGoldPrice, setGold8Price, setSilverPrice, date, setDate,
   onGenerate, onDownload, onShare, onReset, onSyncDB, onBackToGenerate,
   isGenerating, isDownloading, isSharing, isSyncing, isExportEnabled,
   images, sessionUploads, currentImage, currentIndex, totalImages,

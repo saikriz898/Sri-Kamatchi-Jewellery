@@ -11,7 +11,6 @@ export default function Home() {
   const {
     rates, setGoldPrice, setGold8Price, setSilverPrice,
     date, setDate,
-    priceDropNote, setPriceDropNote,
     currentImage,
     storedImages, sessionUploads, currentIndex, totalImages,
     isLoadingImages, imageError,
@@ -112,8 +111,6 @@ export default function Home() {
         isSharing={isSharing}
         isExportEnabled={isExportEnabled}
         notification={notification}
-        priceDropNote={priceDropNote}
-        setPriceDropNote={setPriceDropNote}
         metalMode={activeMetal}
         setMetalMode={setActiveMetal}
         date={date}
@@ -165,8 +162,6 @@ export default function Home() {
             setSilverPrice={setSilverPrice}
             date={date}
             setDate={setDate}
-            priceDropNote={priceDropNote}
-            setPriceDropNote={setPriceDropNote}
             activeMetal={activeMetal}
             setActiveMetal={setActiveMetal}
             storedImages={storedImages}
