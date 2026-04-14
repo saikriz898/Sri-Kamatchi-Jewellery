@@ -4,7 +4,7 @@ import React, { forwardRef } from 'react';
 
 const CINZEL = "var(--font-cinzel), serif";
 const TAMIL = "var(--font-noto-tamil), serif";
-const RATE_FONT = "'Times New Roman', Times, serif";
+const RATE_FONT = "var(--font-playfair), serif";
 const GOLD_TEXT = "#D6B963";
 const GOLD_PILL = "#E9D490";
 
@@ -250,23 +250,24 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
                   <span
                     style={{
                       fontFamily: RATE_FONT,
-                      fontSize: '1.04vh',
-                      fontWeight: 900,
-                      marginTop: '0.24vh',
-                      marginRight: '0.14vh',
+                      fontSize: '1.3vh',
+                      fontWeight: 500,
+                      marginTop: '0.3vh',
+                      marginRight: '0.1vh',
                       color: GOLD_TEXT,
                     }}
                   >
                     ₹
                   </span>
                   <span
-                    className="font-black"
                     style={{
                       fontFamily: RATE_FONT,
-                      fontSize: '2.08vh',
+                      fontSize: '2.4vh',
+                      fontWeight: 600,
                       lineHeight: 1,
-                      color: '#fff4dc',
-                      textShadow: '0 1px 0 rgba(0,0,0,0.4)',
+                      color: '#FFFFFF',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.4)',
+                      letterSpacing: '-0.01em'
                     }}
                   >
                     {formatValue(col.key as keyof PosterCanvasGoldProps["rates"])}

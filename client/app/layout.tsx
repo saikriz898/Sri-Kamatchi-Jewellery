@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Noto_Serif_Tamil, Cinzel } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Serif_Tamil, Cinzel, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,6 +22,12 @@ const cinzel = Cinzel({
   variable: "--font-cinzel",
   subsets: ["latin"],
   weight: ["400", "700", "900"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 
@@ -60,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoTamil.variable} ${cinzel.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoTamil.variable} ${cinzel.variable} ${playfair.variable} h-full antialiased dark`}
     >
       <body className="h-screen overflow-hidden flex flex-col bg-[#050402] text-[#e5d5c5]">
         {children}
