@@ -31,7 +31,7 @@ interface MobileControlPanelProps {
   isDownloading: boolean;
   isSharing: boolean;
   isExportEnabled: boolean;
-  images: { url: string; order: number }[];
+  images: string[];
   sessionUploads: Set<string>;
   currentImage?: string;
   currentIndex: number;
@@ -62,7 +62,7 @@ export default function MobileControlPanel({
     ? 'படங்கள் இல்லை'
     : currentIndex === -1
       ? `0 / ${totalImages}`
-      : `${images[currentIndex % 20]?.order || (currentIndex + 1)} / ${totalImages}`;
+      : `${(currentIndex % totalImages) + 1} / ${totalImages}`;
 
   return (
     <div className="w-full flex flex-col gap-8 pb-32">

@@ -19,14 +19,14 @@ const upload = multer({
   },
 });
 
-async function compressBuffer(buffer, quality = 70, size = 1500) {
+async function compressBuffer(buffer, quality = 80) {
   try {
     return await sharp(buffer)
-      .resize(size, size, { fit: 'inside', withoutEnlargement: true })
-      .jpeg({ quality, progressive: true, mozjpeg: true })
+      .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality, progressive: true })
       .toBuffer();
   } catch {
-    return buffer;
+    return buffer; // fallback: store original
   }
 }
 
@@ -48,7 +48,7 @@ router.get('/image-library', async (req, res) => {
     // Exclude binary data from list query for performance
     const { rows: images } = await pool.query(
       `SELECT id, image_url, "order", is_used, used_at, file_size, compressed_size, mime_type
-       FROM images ORDER BY "order" ASC, id ASC LIMIT $1 OFFSET $2`,
+       FROM images ORDER BY "order" ASC LIMIT $1 OFFSET $2`,
       [limit, offset]
     );
 
@@ -126,10 +126,8 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
     const saved = [];
 
     for (const file of req.files) {
-      const rawBuffer = file.buffer;
-      // High-quality "Original" (Max 1800px, 80 quality) - Aggressive fix for "Response too large"
-      const originalBuffer = await compressBuffer(rawBuffer, 80, 1800); 
-      const compressedBuffer = await compressBuffer(rawBuffer, 60, 1000);
+      const originalBuffer = file.buffer;
+      const compressedBuffer = await compressBuffer(originalBuffer, 80);
 
       const { rows } = await pool.query(
         `INSERT INTO images
@@ -179,7 +177,7 @@ router.post('/sync-images', async (req, res) => {
     );
 
     // Reorder remaining sequentially
-    const { rows: valid } = await pool.query('SELECT id FROM images ORDER BY "order" ASC, id ASC');
+    const { rows: valid } = await pool.query('SELECT id FROM images ORDER BY "order" ASC');
     for (let i = 0; i < valid.length; i++) {
       await pool.query('UPDATE images SET "order"=$1 WHERE id=$2', [i + 1, valid[i].id]);
     }
@@ -189,31 +187,6 @@ router.post('/sync-images', async (req, res) => {
     if (stateRows[0]) {
       const safeIndex = valid.length === 0 ? -1 : Math.min(stateRows[0].current_index, valid.length - 1);
       await pool.query('UPDATE studio_state SET current_index=$1 WHERE id=$2', [safeIndex, stateRows[0].id]);
-    }
-
-    // Optimization Phase: Aggressively fix images causing Neon limits
-    // We process ALL images to ensure total row size is < 1.2MB
-    const { rows: allImgs } = await pool.query('SELECT id, image_data, compressed_data FROM images');
-    for (const img of allImgs) {
-      let needsUpdate = false;
-      let newOriginal = img.image_data;
-      let newCompressed = img.compressed_data;
-
-      if (img.image_data && img.image_data.length > 800000) {
-        newOriginal = await compressBuffer(img.image_data, 80, 1800);
-        needsUpdate = true;
-      }
-      if (img.compressed_data && img.compressed_data.length > 400000) {
-        newCompressed = await compressBuffer(img.compressed_data, 60, 1000);
-        needsUpdate = true;
-      }
-
-      if (needsUpdate) {
-        await pool.query(
-          'UPDATE images SET image_data=$1, compressed_data=$2, file_size=$3, compressed_size=$4 WHERE id=$5',
-          [newOriginal, newCompressed, newOriginal?.length || 0, newCompressed?.length || 0, img.id]
-        );
-      }
     }
 
     const total = valid.length;
@@ -248,7 +221,7 @@ router.delete('/images/:id', async (req, res) => {
     if (!rowCount) return res.status(404).json({ error: 'Image not found' });
 
     // Reorder remaining sequentially to close the gap
-    const { rows: remaining } = await pool.query('SELECT id FROM images ORDER BY "order" ASC, id ASC');
+    const { rows: remaining } = await pool.query('SELECT id FROM images ORDER BY "order" ASC');
     for (let i = 0; i < remaining.length; i++) {
       await pool.query('UPDATE images SET "order"=$1 WHERE id=$2', [i + 1, remaining[i].id]);
     }
@@ -279,7 +252,7 @@ router.get('/images', async (req, res) => {
     const total = parseInt(rows[0].total);
     const used = parseInt(rows[0].used);
     const { rows: nextRows } = await pool.query(
-      `SELECT "order" FROM images WHERE is_used=false ORDER BY "order" ASC, id ASC LIMIT 1`
+      `SELECT "order" FROM images WHERE is_used=false ORDER BY "order" ASC LIMIT 1`
     );
     res.json({ total, used, remaining: total - used, nextImageOrder: nextRows[0]?.order || null });
   } catch (err) {
@@ -295,12 +268,12 @@ router.get('/next-image', async (req, res) => {
     if (total === 0) return res.status(404).json({ error: 'No images found.' });
 
     let { rows } = await pool.query(
-      `SELECT id, "order" FROM images WHERE is_used=false ORDER BY "order" ASC, id ASC LIMIT 1`
+      `SELECT id, "order" FROM images WHERE is_used=false ORDER BY "order" ASC LIMIT 1`
     );
     if (!rows[0]) {
       await pool.query('UPDATE images SET is_used=false, used_at=null');
       ({ rows } = await pool.query(
-        `SELECT id, "order" FROM images WHERE is_used=false ORDER BY "order" ASC, id ASC LIMIT 1`
+        `SELECT id, "order" FROM images WHERE is_used=false ORDER BY "order" ASC LIMIT 1`
       ));
     }
 
