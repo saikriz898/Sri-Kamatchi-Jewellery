@@ -15,7 +15,7 @@ interface PriceEditorProps {
   setDate: (val: string) => void;
   activeMetal: 'gold' | 'silver';
   setActiveMetal: (val: 'gold' | 'silver') => void;
-  storedImages: string[];
+  storedImages: { url: string; order: number }[];
   sessionUploads: Set<string>;
   currentIndex: number;
   totalImages: number;
@@ -65,11 +65,15 @@ export default function PriceEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const safeIndex = currentIndex >= 0 ? currentIndex % totalImages : -1;
+  const currentOrder = (currentIndex >= 0 && storedImages.length > 0) 
+    ? storedImages[currentIndex % imagesPerPage]?.order || (currentIndex + 1)
+    : 0;
+
   const cycleLabel = totalImages === 0
     ? 'No Images'
-    : safeIndex === -1
+    : currentIndex === -1
       ? `0 / ${totalImages}`
-      : `${safeIndex + 1} / ${totalImages}`;
+      : `${currentOrder} / ${totalImages}`;
 
   return (
     <>
@@ -319,7 +323,8 @@ export default function PriceEditor({
                   </p>
                 </div>
               ) : (
-                storedImages.map((src, idx) => {
+                storedImages.map((img, idx) => {
+                  const src = img.url;
                   const globalIdx = (currentPage - 1) * imagesPerPage + idx;
                   const isActive = totalImages > 0 && safeIndex === globalIdx;
                   return (
@@ -336,7 +341,7 @@ export default function PriceEditor({
                         alt="product"
                       />
                       <div className="absolute top-4 left-4 px-3 py-1 bg-black/60 backdrop-blur-xl rounded-xl border border-white/10 shadow-xl">
-                        <span className="text-[9px] font-black text-[#b8860b] tracking-wider">#{idx + 1}</span>
+                        <span className="text-[9px] font-black text-[#b8860b] tracking-wider">#{img.order}</span>
                       </div>
 
                       <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 z-30">

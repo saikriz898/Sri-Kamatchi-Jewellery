@@ -29,7 +29,7 @@ interface MobileEditorProps {
   handleReset: () => void;
   handleSyncDB: () => void;
   isSyncing: boolean;
-  images: string[];
+  images: { url: string; order: number }[];
   sessionUploads: Set<string>;
   currentIndex: number;
   totalImages: number;

@@ -48,7 +48,7 @@ router.get('/image-library', async (req, res) => {
     // Exclude binary data from list query for performance
     const { rows: images } = await pool.query(
       `SELECT id, image_url, "order", is_used, used_at, file_size, compressed_size, mime_type
-       FROM images ORDER BY "order" ASC LIMIT $1 OFFSET $2`,
+       FROM images ORDER BY "order" ASC, id ASC LIMIT $1 OFFSET $2`,
       [limit, offset]
     );
 
@@ -177,7 +177,7 @@ router.post('/sync-images', async (req, res) => {
     );
 
     // Reorder remaining sequentially
-    const { rows: valid } = await pool.query('SELECT id FROM images ORDER BY "order" ASC');
+    const { rows: valid } = await pool.query('SELECT id FROM images ORDER BY "order" ASC, id ASC');
     for (let i = 0; i < valid.length; i++) {
       await pool.query('UPDATE images SET "order"=$1 WHERE id=$2', [i + 1, valid[i].id]);
     }
@@ -221,7 +221,7 @@ router.delete('/images/:id', async (req, res) => {
     if (!rowCount) return res.status(404).json({ error: 'Image not found' });
 
     // Reorder remaining sequentially to close the gap
-    const { rows: remaining } = await pool.query('SELECT id FROM images ORDER BY "order" ASC');
+    const { rows: remaining } = await pool.query('SELECT id FROM images ORDER BY "order" ASC, id ASC');
     for (let i = 0; i < remaining.length; i++) {
       await pool.query('UPDATE images SET "order"=$1 WHERE id=$2', [i + 1, remaining[i].id]);
     }
@@ -252,7 +252,7 @@ router.get('/images', async (req, res) => {
     const total = parseInt(rows[0].total);
     const used = parseInt(rows[0].used);
     const { rows: nextRows } = await pool.query(
-      `SELECT "order" FROM images WHERE is_used=false ORDER BY "order" ASC LIMIT 1`
+      `SELECT "order" FROM images WHERE is_used=false ORDER BY "order" ASC, id ASC LIMIT 1`
     );
     res.json({ total, used, remaining: total - used, nextImageOrder: nextRows[0]?.order || null });
   } catch (err) {
@@ -268,12 +268,12 @@ router.get('/next-image', async (req, res) => {
     if (total === 0) return res.status(404).json({ error: 'No images found.' });
 
     let { rows } = await pool.query(
-      `SELECT id, "order" FROM images WHERE is_used=false ORDER BY "order" ASC LIMIT 1`
+      `SELECT id, "order" FROM images WHERE is_used=false ORDER BY "order" ASC, id ASC LIMIT 1`
     );
     if (!rows[0]) {
       await pool.query('UPDATE images SET is_used=false, used_at=null');
       ({ rows } = await pool.query(
-        `SELECT id, "order" FROM images WHERE is_used=false ORDER BY "order" ASC LIMIT 1`
+        `SELECT id, "order" FROM images WHERE is_used=false ORDER BY "order" ASC, id ASC LIMIT 1`
       ));
     }
 

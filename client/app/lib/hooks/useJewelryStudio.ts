@@ -10,7 +10,7 @@ export function useJewelryStudio() {
   const [date, setDate] = useState(new Date().toLocaleDateString('en-GB'));
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [totalImages, setTotalImages] = useState(0);
-  const [storedImages, setStoredImages] = useState<string[]>([]);
+  const [storedImages, setStoredImages] = useState<{ url: string; order: number }[]>([]);
   const [sessionUploads, setSessionUploads] = useState<Set<string>>(new Set());
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -39,11 +39,10 @@ export function useJewelryStudio() {
       const res = await fetch(`${API_URL}/api/image-library?page=${page}&limit=20`);
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
-      const apiBase = API_URL.replace(/\/$/, '');
-      const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string }) => {
+      const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string; order: number }) => {
         const url = img.compressedUrl || img.imageUrl || "";
-        return url; // Use relative paths to allow Next.js rewrites to handle proxying
-      }).filter((url: string) => Boolean(url));
+        return { url, order: img.order };
+      }).filter((img: { url: string }) => Boolean(img.url));
       setStoredImages(imgs);
       setTotalImages(data.pagination?.total || imgs.length);
       setTotalPages(data.pagination?.pages || 1);
@@ -372,7 +371,7 @@ export function useJewelryStudio() {
 
   // Derive currentImage — always in sync, no stale state
   const currentImage = storedImages.length > 0 && currentIndex >= 0
-    ? storedImages[currentIndex % imagesPerPage] // Must use imagesPerPage to extract local index from global.
+    ? storedImages[currentIndex % imagesPerPage]?.url
     : undefined;
 
   return {
