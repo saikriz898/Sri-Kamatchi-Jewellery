@@ -19,14 +19,14 @@ const upload = multer({
   },
 });
 
-async function compressBuffer(buffer, quality = 80, size = 1200) {
+async function compressBuffer(buffer, quality = 70, size = 1500) {
   try {
     return await sharp(buffer)
       .resize(size, size, { fit: 'inside', withoutEnlargement: true })
-      .jpeg({ quality, progressive: true })
+      .jpeg({ quality, progressive: true, mozjpeg: true })
       .toBuffer();
   } catch {
-    return buffer; // fallback
+    return buffer;
   }
 }
 
@@ -127,9 +127,9 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
 
     for (const file of req.files) {
       const rawBuffer = file.buffer;
-      // High-quality "Original" (Max 2000px, 90 quality) - Fixes "Response too large" errors
-      const originalBuffer = await compressBuffer(rawBuffer, 90, 2000); 
-      const compressedBuffer = await compressBuffer(rawBuffer, 80, 1200);
+      // High-quality "Original" (Max 1800px, 80 quality) - Aggressive fix for "Response too large"
+      const originalBuffer = await compressBuffer(rawBuffer, 80, 1800); 
+      const compressedBuffer = await compressBuffer(rawBuffer, 60, 1000);
 
       const { rows } = await pool.query(
         `INSERT INTO images
@@ -191,13 +191,28 @@ router.post('/sync-images', async (req, res) => {
       await pool.query('UPDATE studio_state SET current_index=$1 WHERE id=$2', [safeIndex, stateRows[0].id]);
     }
 
-    // Optimization: Fix large images already in DB (Optional)
-    // Select images larger than 2MB and re-compress them
-    const { rows: huge } = await pool.query('SELECT id, image_data FROM images WHERE file_size > 2000000');
-    for (const img of huge) {
-      if (img.image_data) {
-        const optimized = await compressBuffer(img.image_data, 90, 2000);
-        await pool.query('UPDATE images SET image_data=$1, file_size=$2 WHERE id=$3', [optimized, optimized.length, img.id]);
+    // Optimization Phase: Aggressively fix images causing Neon limits
+    // We process ALL images to ensure total row size is < 1.2MB
+    const { rows: allImgs } = await pool.query('SELECT id, image_data, compressed_data FROM images');
+    for (const img of allImgs) {
+      let needsUpdate = false;
+      let newOriginal = img.image_data;
+      let newCompressed = img.compressed_data;
+
+      if (img.image_data && img.image_data.length > 800000) {
+        newOriginal = await compressBuffer(img.image_data, 80, 1800);
+        needsUpdate = true;
+      }
+      if (img.compressed_data && img.compressed_data.length > 400000) {
+        newCompressed = await compressBuffer(img.compressed_data, 60, 1000);
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        await pool.query(
+          'UPDATE images SET image_data=$1, compressed_data=$2, file_size=$3, compressed_size=$4 WHERE id=$5',
+          [newOriginal, newCompressed, newOriginal?.length || 0, newCompressed?.length || 0, img.id]
+        );
       }
     }
 
