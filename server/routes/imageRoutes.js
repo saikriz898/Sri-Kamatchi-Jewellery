@@ -19,14 +19,14 @@ const upload = multer({
   },
 });
 
-async function compressBuffer(buffer, quality = 80) {
+async function compressBuffer(buffer, quality = 80, size = 1200) {
   try {
     return await sharp(buffer)
-      .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+      .resize(size, size, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality, progressive: true })
       .toBuffer();
   } catch {
-    return buffer; // fallback: store original
+    return buffer; // fallback
   }
 }
 
@@ -126,8 +126,10 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
     const saved = [];
 
     for (const file of req.files) {
-      const originalBuffer = file.buffer;
-      const compressedBuffer = await compressBuffer(originalBuffer, 80);
+      const rawBuffer = file.buffer;
+      // High-quality "Original" (Max 2000px, 90 quality) - Fixes "Response too large" errors
+      const originalBuffer = await compressBuffer(rawBuffer, 90, 2000); 
+      const compressedBuffer = await compressBuffer(rawBuffer, 80, 1200);
 
       const { rows } = await pool.query(
         `INSERT INTO images
@@ -187,6 +189,16 @@ router.post('/sync-images', async (req, res) => {
     if (stateRows[0]) {
       const safeIndex = valid.length === 0 ? -1 : Math.min(stateRows[0].current_index, valid.length - 1);
       await pool.query('UPDATE studio_state SET current_index=$1 WHERE id=$2', [safeIndex, stateRows[0].id]);
+    }
+
+    // Optimization: Fix large images already in DB (Optional)
+    // Select images larger than 2MB and re-compress them
+    const { rows: huge } = await pool.query('SELECT id, image_data FROM images WHERE file_size > 2000000');
+    for (const img of huge) {
+      if (img.image_data) {
+        const optimized = await compressBuffer(img.image_data, 90, 2000);
+        await pool.query('UPDATE images SET image_data=$1, file_size=$2 WHERE id=$3', [optimized, optimized.length, img.id]);
+      }
     }
 
     const total = valid.length;
