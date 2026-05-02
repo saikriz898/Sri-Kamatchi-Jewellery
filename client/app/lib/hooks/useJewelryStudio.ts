@@ -41,12 +41,8 @@ export function useJewelryStudio() {
       const data = await res.json();
       const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string }) => {
         const url = img.compressedUrl || img.imageUrl || "";
-        if (!url) return "";
-        if (url.startsWith('http')) return url;
-        // Safe URL joining: remove trailing slash from API_URL and leading slash from url
-        const base = API_URL.replace(/\/+$/, '');
-        const path = url.replace(/^\/+/, '');
-        return `${base}/${path}`;
+        // Use relative paths (/api/...) to allow the Next.js proxy to work on mobile
+        return url && url.startsWith('/') ? url : (url ? `/${url}` : "");
       }).filter((url: string) => Boolean(url));
       setStoredImages(imgs);
       setTotalImages(data.pagination?.total || imgs.length);
