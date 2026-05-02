@@ -121,12 +121,18 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
           alt="Sri Kamatchi"
           className="object-contain drop-shadow-[0_6px_24px_rgba(184,134,11,0.45)]"
           style={{ height: '11.5vh', width: 'auto' }}
+          crossOrigin="anonymous"
+          loading="eager"
+          decoding="sync"
         />
         <img
           src="/Logo-main.png"
           alt="Sri Kamatchi Jewellery"
           className="object-contain drop-shadow-[0_4px_18px_rgba(184,134,11,0.35)]"
           style={{ width: '72%', height: 'auto', marginTop: '0.5vh' }}
+          crossOrigin="anonymous"
+          loading="eager"
+          decoding="sync"
         />
       </header>
 

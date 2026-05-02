@@ -39,10 +39,10 @@ export function useJewelryStudio() {
       const res = await fetch(`${API_URL}/api/image-library?page=${page}&limit=20`);
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
-      const apiBase = API_URL.replace(/\/$/, '');
       const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string }) => {
         const url = img.compressedUrl || img.imageUrl || "";
-        return url; // Use relative paths to allow Next.js rewrites to handle proxying
+        // Prepend API_URL to relative paths for Cloudflare compatibility
+        return url ? (url.startsWith('http') ? url : `${API_URL}${url}`) : "";
       }).filter((url: string) => Boolean(url));
       setStoredImages(imgs);
       setTotalImages(data.pagination?.total || imgs.length);
@@ -159,6 +159,7 @@ export function useJewelryStudio() {
     const handleReconnect = () => {
       setIsConnected(true);
       showToast('Reconnected to server', 'success');
+      // Ensure absolute URL is used for refresh
       setTimeout(() => refreshAssets(currentPageRef.current), 1000);
     };
     const handleReconnectFailed = () => { setIsConnected(false); showToast('Failed to reconnect', 'error'); };
@@ -289,7 +290,7 @@ export function useJewelryStudio() {
         const data = await res.json();
         const urls = new Set<string>();
         if (data.files) {
-          data.files.forEach((f: any) => {
+          data.files.forEach((f: { compressedUrl?: string; imageUrl?: string }) => {
             if (f.compressedUrl) urls.add(f.compressedUrl);
             if (f.imageUrl) urls.add(f.imageUrl);
           });

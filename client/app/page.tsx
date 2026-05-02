@@ -44,10 +44,18 @@ export default function Home() {
   const handleDownload = async () => {
     if (!posterRef.current || !isExportEnabled) return;
     setIsDownloading(true);
+    
+    // Small delay to ensure the DOM has updated (e.g. rounded corners removed)
+    await new Promise(resolve => setTimeout(resolve, 150));
+
     try {
-      const dataUrl = await toJpeg(posterRef.current, { 
+      const el = posterRef.current;
+      const dataUrl = await toJpeg(el, { 
         quality: 0.95, 
         pixelRatio: 3,
+        width: el.offsetWidth,
+        height: el.offsetHeight,
+        cacheBust: true,
         style: { transform: 'scale(1)', borderRadius: '0' }
       });
       const link = document.createElement('a');
@@ -67,10 +75,18 @@ export default function Home() {
   const handleShare = async () => {
     if (!posterRef.current) return;
     setIsSharing(true);
+
+    // Small delay to ensure the DOM has updated
+    await new Promise(resolve => setTimeout(resolve, 150));
+
     try {
-      const dataUrl = await toJpeg(posterRef.current, { 
+      const el = posterRef.current;
+      const dataUrl = await toJpeg(el, { 
         quality: 0.95, 
         pixelRatio: 3,
+        width: el.offsetWidth,
+        height: el.offsetHeight,
+        cacheBust: true,
         style: { transform: 'scale(1)', borderRadius: '0' }
       });
       const blob = await (await fetch(dataUrl)).blob();
