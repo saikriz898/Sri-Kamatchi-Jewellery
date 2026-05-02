@@ -183,8 +183,15 @@ export function useJewelryStudio() {
     });
 
     socket.on('stateUpdate', (data) => {
-      if (data?.currentIndex !== undefined) setCurrentIndex(data.currentIndex);
-      if (data?.total !== undefined) setTotalImages(data.total);
+      if (data?.currentIndex !== undefined) {
+        setCurrentIndex(data.currentIndex);
+        // If the update is for an image on a different page, refresh the assets
+        const neededPage = Math.floor(data.currentIndex / imagesPerPage) + 1;
+        if (neededPage !== currentPageRef.current) {
+          refreshAssets(neededPage);
+        }
+      }
+      if (data?.total !== undefined) setTotalImages(Number(data.total));
     });
     socket.on('libraryUpdate', () => refreshAssets(currentPageRef.current));
     socket.on('uploadProgress', (data) => {
@@ -208,6 +215,7 @@ export function useJewelryStudio() {
       socket.off('uploadProgress');
       socket.off('syncProgress');
       socket.off('syncComplete');
+      socket.disconnect(); // Proper cleanup to prevent leaks
     };
   }, [refreshAssets, showToast]);
 

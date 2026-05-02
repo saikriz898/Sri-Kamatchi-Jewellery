@@ -64,7 +64,7 @@ export default function PriceEditor({
 }: PriceEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const safeIndex = currentIndex >= 0 ? currentIndex % totalImages : -1;
+  const safeIndex = (currentIndex >= 0 && totalImages > 0) ? currentIndex % totalImages : -1;
   const cycleLabel = totalImages === 0
     ? 'No Images'
     : safeIndex === -1
