@@ -41,8 +41,12 @@ export function useJewelryStudio() {
       const data = await res.json();
       const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string }) => {
         const url = img.compressedUrl || img.imageUrl || "";
-        // Prepend API_URL to relative paths for Cloudflare compatibility
-        return url ? (url.startsWith('http') ? url : `${API_URL}${url}`) : "";
+        if (!url) return "";
+        if (url.startsWith('http')) return url;
+        // Safe URL joining: remove trailing slash from API_URL and leading slash from url
+        const base = API_URL.replace(/\/+$/, '');
+        const path = url.replace(/^\/+/, '');
+        return `${base}/${path}`;
       }).filter((url: string) => Boolean(url));
       setStoredImages(imgs);
       setTotalImages(data.pagination?.total || imgs.length);

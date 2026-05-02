@@ -87,6 +87,7 @@ router.get('/image/:id', async (req, res) => {
 
     res.set('Content-Type', img.mime_type || 'image/jpeg');
     res.set('Cache-Control', 'public, max-age=31536000');
+    res.set('Access-Control-Allow-Origin', '*'); // Explicit CORS for binary data
     res.send(img.image_data);
   } catch (err) {
     res.status(500).json({ error: 'Failed to serve image', details: err.message });
@@ -108,6 +109,7 @@ router.get('/compressed-image/:id', async (req, res) => {
 
     res.set('Content-Type', 'image/jpeg');
     res.set('Cache-Control', 'public, max-age=31536000');
+    res.set('Access-Control-Allow-Origin', '*'); // Explicit CORS for binary data
     res.send(data);
   } catch (err) {
     res.status(500).json({ error: 'Failed to serve compressed image', details: err.message });
