@@ -11,7 +11,6 @@ export function useJewelryStudio() {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [totalImages, setTotalImages] = useState(0);
   const [storedImages, setStoredImages] = useState<string[]>([]);
-  const [sessionUploads, setSessionUploads] = useState<Set<string>>(new Set());
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,7 +72,7 @@ export function useJewelryStudio() {
         if (stateRes?.total !== undefined) setTotalImages(stateRes.total);
 
         // Fetch Latest Prices from the Vault
-        const priceRes = await fetch(`${API_URL}/api/prices/latest`, { signal: controller.signal }).then(r => r.json());
+        const priceRes = await fetch(`${API_URL}/api/price`, { signal: controller.signal }).then(r => r.json());
         if (priceRes?.gold1g) {
           setRates({
             gold1g: priceRes.gold1g,
@@ -217,7 +216,7 @@ export function useJewelryStudio() {
       socket.off('syncComplete');
       socket.disconnect(); // Proper cleanup to prevent leaks
     };
-  }, [refreshAssets, showToast]);
+  }, [refreshAssets, showToast, imagesPerPage]);
 
 
   const setGoldPrice = (val: string) => {
@@ -295,15 +294,7 @@ export function useJewelryStudio() {
         batch.forEach(f => formData.append('photos', f));
         const res = await fetch(`${API_URL}/api/upload-images`, { method: 'POST', body: formData });
         if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
-        const data = await res.json();
-        const urls = new Set<string>();
-        if (data.files) {
-          data.files.forEach((f: { compressedUrl?: string; imageUrl?: string }) => {
-            if (f.compressedUrl) urls.add(f.compressedUrl);
-            if (f.imageUrl) urls.add(f.imageUrl);
-          });
-        }
-        setSessionUploads(prev => new Set([...prev, ...urls]));
+        await res.json();
         uploadedCount += batch.length;
         setUploadProgress({ completed: uploadedCount, total: files.length, message: `Uploaded ${uploadedCount}/${files.length} images` });
       }
@@ -389,7 +380,7 @@ export function useJewelryStudio() {
     date, setDate,
     currentImage,
     currentIndex, totalImages,
-    storedImages, sessionUploads,
+    storedImages,
     isLoadingImages, imageError,
     activeMetal, setActiveMetal,
     isConnected,

@@ -3,7 +3,8 @@
 import { useRef } from "react";
 import {
   Upload, Sparkles, Download, MessageSquare,
-  RefreshCw, Loader2, Calendar, CheckCircle2
+  RefreshCw, Loader2, Calendar, CheckCircle2,
+  XCircle, AlertTriangle
 } from "lucide-react";
 
 interface PriceEditorProps {
@@ -16,7 +17,6 @@ interface PriceEditorProps {
   activeMetal: 'gold' | 'silver';
   setActiveMetal: (val: 'gold' | 'silver') => void;
   storedImages: string[];
-  sessionUploads: Set<string>;
   currentIndex: number;
   totalImages: number;
   isGenerating: boolean;
@@ -53,7 +53,7 @@ export default function PriceEditor({
   rates, setGoldPrice, setGold8Price, setSilverPrice,
   date, setDate,
   activeMetal, setActiveMetal,
-  storedImages, sessionUploads, currentIndex, totalImages,
+  storedImages, currentIndex, totalImages,
   isGenerating, isUploading, isDownloading, isSharing, isSyncing,
   isExportEnabled, isLoadingImages, imageError,
   notification,
@@ -82,7 +82,9 @@ export default function PriceEditor({
                 notification.type === 'warning' ? 'bg-amber-400/10 text-amber-300' :
                   'bg-[#b8860b]/10 text-[#b8860b]'
               }`}>
-              {notification.type === 'success' ? <CheckCircle2 size={18} /> : <RefreshCw size={18} />}
+              {notification.type === 'success' ? <CheckCircle2 size={18} /> :
+               notification.type === 'error' ? <XCircle size={18} /> :
+               <AlertTriangle size={18} />}
               <div className={`absolute inset-0 blur-lg opacity-40 rounded-full ${notification.type === 'error' ? 'bg-red-500' :
                   notification.type === 'warning' ? 'bg-amber-400' :
                     'bg-[#b8860b]'
@@ -340,14 +342,12 @@ export default function PriceEditor({
                       </div>
 
                       <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 z-30">
-                        {sessionUploads.has(src) && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); onDeleteImage(src); }}
-                            className="w-8 h-8 flex items-center justify-center bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all backdrop-blur-xl cursor-pointer shadow-lg border border-red-500/20"
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
-                          </button>
-                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDeleteImage(src); }}
+                          className="w-8 h-8 flex items-center justify-center bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all backdrop-blur-xl cursor-pointer shadow-lg border border-red-500/20"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
+                        </button>
                       </div>
 
                       {isActive && (

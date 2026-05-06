@@ -32,7 +32,6 @@ interface MobileControlPanelProps {
   isSharing: boolean;
   isExportEnabled: boolean;
   images: string[];
-  sessionUploads: Set<string>;
   currentImage?: string;
   currentIndex: number;
   totalImages: number;
@@ -51,7 +50,7 @@ export default function MobileControlPanel({
   rates, setGoldPrice, setGold8Price, setSilverPrice, date, setDate,
   onGenerate, onDownload, onShare, onReset, onSyncDB, onBackToGenerate,
   isGenerating, isDownloading, isSharing, isSyncing, isExportEnabled,
-  images, sessionUploads, currentImage, currentIndex, totalImages,
+  images, currentImage, currentIndex, totalImages,
   currentPage, totalPages, goToPage,
   onSelectImage, onDeleteImage, isLoadingImages, imageError,
   onUploadPhotos, isUploadingPhotos,
@@ -157,7 +156,7 @@ export default function MobileControlPanel({
           currentImage={currentImage}
           onSelectImage={onSelectImage}
           onDeleteImage={onDeleteImage}
-          canDeleteImage={(src) => editMode && sessionUploads.has(src)}
+          canDeleteImage={() => editMode}
           isLoading={isLoadingImages}
           error={imageError}
           columnsClassName="grid-cols-2"

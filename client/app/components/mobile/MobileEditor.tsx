@@ -30,7 +30,6 @@ interface MobileEditorProps {
   handleSyncDB: () => void;
   isSyncing: boolean;
   images: string[];
-  sessionUploads: Set<string>;
   currentIndex: number;
   totalImages: number;
   currentPage: number;
@@ -50,7 +49,7 @@ export default function MobileEditor({
   notification, 
   metalMode, setMetalMode, date, setDate,
   posterRef, handleGenerate, handleDownload, handleShare, onBackToGenerate, handleReset, handleSyncDB,
-  images, sessionUploads, onSelectImage, onDeleteImage, isLoadingImages, imageError,
+  images, onSelectImage, onDeleteImage, isLoadingImages, imageError,
   onUploadPhotos, isUploadingPhotos,
   currentIndex, totalImages, currentPage, totalPages, goToPage,
 }: MobileEditorProps) {
@@ -146,7 +145,6 @@ export default function MobileEditor({
               isExportEnabled={isExportEnabled}
               isSyncing={isSyncing}
               images={images}
-              sessionUploads={sessionUploads}
               currentImage={currentImage}
               onSelectImage={onSelectImage}
               onDeleteImage={onDeleteImage}
