@@ -233,12 +233,6 @@ export default function Home() {
               />
             </div>
           </div>
-
-          <footer className="absolute bottom-10 flex items-center gap-6 text-white/20">
-            <div className="flex items-center gap-2"><span className="text-[9px] font-bold uppercase tracking-widest">9:16 Aspect</span></div>
-            <div className="w-1 h-1 rounded-full bg-white/10" />
-            <div className="flex items-center gap-2"><span className="text-[9px] font-bold uppercase tracking-widest">4K Ready Export</span></div>
-          </footer>
         </section>
       </div>
       <GlobalDragOverlay onDrop={onUploadPhotos} />

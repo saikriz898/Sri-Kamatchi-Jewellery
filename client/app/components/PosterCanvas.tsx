@@ -77,12 +77,12 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
             aria-hidden="true"
             crossOrigin="anonymous"
           />
-          {/* Main product image - contained to ensure no edges are cut off */}
+          {/* Main product image - cover to fill the 9:16 frame perfectly */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt="Jewellery"
-            className="absolute inset-0 h-full w-full object-contain object-center z-10"
+            className="absolute inset-0 h-full w-full object-cover object-center z-10"
             crossOrigin="anonymous"
           />
         </div>
