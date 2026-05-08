@@ -52,12 +52,13 @@ export default function Home() {
     try {
       const el = posterRef.current;
       const dataUrl = await toJpeg(el, { 
-        quality: 0.95, 
+        quality: 0.98, 
         pixelRatio: 3,
         width: el.offsetWidth,
         height: el.offsetHeight,
         cacheBust: true,
-        style: { transform: 'scale(1)', borderRadius: '0' }
+        backgroundColor: '#050402',
+        style: { transform: 'scale(1)' }
       });
       const link = document.createElement('a');
       link.download = `Sri_Kamatchi_${date.replace(/ /g, '_')}.jpg`;
@@ -83,12 +84,13 @@ export default function Home() {
     try {
       const el = posterRef.current;
       const dataUrl = await toJpeg(el, { 
-        quality: 0.95, 
+        quality: 0.98, 
         pixelRatio: 3,
         width: el.offsetWidth,
         height: el.offsetHeight,
         cacheBust: true,
-        style: { transform: 'scale(1)', borderRadius: '0' }
+        backgroundColor: '#050402',
+        style: { transform: 'scale(1)' }
       });
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], `JewelleryPoster.jpg`, { type: 'image/jpeg' });
