@@ -22,7 +22,7 @@ const upload = multer({
 async function compressBuffer(buffer, quality = 80) {
   try {
     return await sharp(buffer)
-      .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+      .resize(2400, 2400, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality, progressive: true })
       .toBuffer();
   } catch {

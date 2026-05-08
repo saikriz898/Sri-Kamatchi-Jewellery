@@ -67,14 +67,25 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
       }}
     >
       {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt="Jewellery"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-          loading="eager"
-          decoding="sync"
-          crossOrigin="anonymous"
-        />
+        <div className="absolute inset-0">
+          {/* Blurred background layer to fill gaps for non-9:16 images */}
+          <img
+            src={imageUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-40 blur-2xl scale-110"
+            aria-hidden="true"
+            crossOrigin="anonymous"
+          />
+          {/* Main product image - contained to ensure no edges are cut off */}
+          <img
+            src={imageUrl}
+            alt="Jewellery"
+            className="absolute inset-0 h-full w-full object-contain object-center z-10"
+            loading="eager"
+            decoding="sync"
+            crossOrigin="anonymous"
+          />
+        </div>
       ) : (
         <div
           className="absolute inset-0"
@@ -93,7 +104,7 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
         className="absolute inset-0"
         style={{
           background: imageUrl
-            ? 'linear-gradient(180deg, rgba(14,7,2,0.68) 0%, rgba(14,7,2,0.08) 34%, rgba(14,7,2,0.2) 58%, rgba(8,4,1,0.9) 100%)'
+            ? 'linear-gradient(180deg, rgba(14,7,2,0.85) 0%, rgba(14,7,2,0.4) 15%, rgba(14,7,2,0) 30%, rgba(14,7,2,0) 65%, rgba(14,7,2,0.3) 78%, rgba(8,4,1,0.95) 100%)'
             : 'linear-gradient(180deg, rgba(46,25,9,0.94) 0%, rgba(18,8,3,0.8) 36%, rgba(12,5,2,0.86) 68%, rgba(8,4,1,0.96) 100%)',
         }}
       />
