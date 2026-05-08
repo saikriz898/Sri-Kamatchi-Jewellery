@@ -170,7 +170,7 @@ export default function Home() {
       </div>
 
       <div className="relative h-full flex z-10">
-        <section className="h-full border-r border-white/5 bg-transparent backdrop-blur-xl">
+        <section className="h-full border-r border-white/5 bg-black/40 backdrop-blur-xl">
           <PriceEditor
             rates={rates}
             setGoldPrice={setGoldPrice}

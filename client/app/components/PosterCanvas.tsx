@@ -77,12 +77,12 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
             aria-hidden="true"
             crossOrigin="anonymous"
           />
-          {/* Main product image - optimized fit for the vertical space */}
+          {/* Main product image - perfectly fills the 9:16 frame for a professional full-bleed look */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt="Jewellery"
-            className="absolute inset-x-0 top-[14vh] bottom-[28vh] w-full h-[58vh] object-contain object-center z-10 px-[2vh]"
+            className="absolute inset-0 w-full h-full object-cover object-center z-10"
             crossOrigin="anonymous"
           />
         </div>
@@ -132,7 +132,7 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
           src="/Logo_top.png"
           alt="Sri Kamatchi"
           className="object-contain drop-shadow-[0_6px_24px_rgba(184,134,11,0.45)]"
-          style={{ height: '11.5vh', width: 'auto' }}
+          style={{ height: '9.5vh', width: 'auto' }}
           crossOrigin="anonymous"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
