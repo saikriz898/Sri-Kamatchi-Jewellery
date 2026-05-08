@@ -5,6 +5,7 @@ import { toJpeg } from "html-to-image";
 import PriceEditor from "./components/PriceEditor";
 import PosterCanvas from "./components/PosterCanvas";
 import MobileEditor from "./components/mobile/MobileEditor";
+import GlobalDragOverlay from "./components/GlobalDragOverlay";
 import { useJewelryStudio } from "./lib/hooks/useJewelryStudio";
 
 export default function Home() {
@@ -240,6 +241,7 @@ export default function Home() {
           </footer>
         </section>
       </div>
+      <GlobalDragOverlay onDrop={onUploadPhotos} />
     </main>
   );
 }

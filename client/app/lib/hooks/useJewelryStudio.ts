@@ -5,10 +5,13 @@ import API_URL from "../config";
 export function useJewelryStudio() {
   const socketRef = useRef<Socket | null>(null);
   const currentPageRef = useRef(1);
+  const isUploadingPhotosRef = useRef(false);
+  const storedImagesRef = useRef<string[]>([]);
 
   const [rates, setRates] = useState({ gold1g: "", gold8g: "", silver1g: "" });
   const [date, setDate] = useState(new Date().toLocaleDateString('en-GB'));
   const [currentIndex, setCurrentIndex] = useState(-1);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
   const [totalImages, setTotalImages] = useState(0);
   const [storedImages, setStoredImages] = useState<string[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(false);
@@ -32,30 +35,49 @@ export function useJewelryStudio() {
     setTimeout(() => setNotification(null), 3000);
   }, []);
 
-  const refreshAssets = useCallback(async (page = 1) => {
+  const refreshAssets = useCallback(async (page = 1, forceSelectIndex?: number) => {
     setIsLoadingImages(true);
     try {
       const res = await fetch(`${API_URL}/api/image-library?page=${page}&limit=20`);
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
       const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string }) => {
-        const url = img.compressedUrl || img.imageUrl || "";
-        // Use relative paths (/api/...) to allow the Next.js proxy to work on mobile
-        return url && url.startsWith('/') ? url : (url ? `/${url}` : "");
+        const rawUrl = img.compressedUrl || img.imageUrl || "";
+        if (!rawUrl) return "";
+        if (rawUrl.startsWith('http')) return rawUrl;
+        
+        // Ensure absolute URL to avoid proxy issues on mobile
+        const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+        const path = rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
+        return `${baseUrl}${path}`;
       }).filter((url: string) => Boolean(url));
+      
       setStoredImages(imgs);
+      storedImagesRef.current = imgs;
       setTotalImages(data.pagination?.total || imgs.length);
       setTotalPages(data.pagination?.pages || 1);
+      
       const pg = data.pagination?.page || 1;
       setCurrentPage(pg);
       currentPageRef.current = pg;
+
+      // If we are forcing a specific global index selection (e.g. on hydrate)
+      if (forceSelectIndex !== undefined && forceSelectIndex >= 0) {
+        const localIdx = forceSelectIndex % 20;
+        if (imgs[localIdx]) {
+          setCurrentImageUrl(imgs[localIdx]);
+        }
+      }
+
       setImageError(null);
+      return imgs;
     } catch (err: unknown) {
       console.error("Failed to load library:", err);
       setStoredImages([]);
       setTotalImages(0);
       setTotalPages(1);
       setImageError(`Library offline: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      return [];
     } finally {
       setIsLoadingImages(false);
     }
@@ -68,7 +90,11 @@ export function useJewelryStudio() {
       try {
         // Fetch Studio State (Index)
         const stateRes = await fetch(`${API_URL}/api/studio-state`, { signal: controller.signal }).then(r => r.json());
-        if (stateRes?.currentIndex !== undefined) setCurrentIndex(stateRes.currentIndex);
+        let initialIndex = -1;
+        if (stateRes?.currentIndex !== undefined) {
+          initialIndex = stateRes.currentIndex;
+          setCurrentIndex(initialIndex);
+        }
         if (stateRes?.total !== undefined) setTotalImages(stateRes.total);
 
         // Fetch Latest Prices from the Vault
@@ -81,8 +107,6 @@ export function useJewelryStudio() {
           });
 
           const today = new Date().toLocaleDateString('en-GB');
-          // Only use the DB date if it matches today's date (active session).
-          // Otherwise, default to Today's date automatically.
           if (priceRes.date && priceRes.date === today) {
             setDate(priceRes.date);
           } else {
@@ -90,7 +114,15 @@ export function useJewelryStudio() {
           }
         }
 
-        await refreshAssets();
+        // Calculate the page that contains the initialIndex
+        const initialPage = initialIndex >= 0 ? Math.floor(initialIndex / 20) + 1 : 1;
+        const imgs = await refreshAssets(initialPage, initialIndex);
+
+        // Auto-select the first image if none is currently selected and images are available
+        if (initialIndex === -1 && imgs.length > 0) {
+          setCurrentImageUrl(imgs[0]);
+          setCurrentIndex(0);
+        }
       } catch (err: unknown) {
         if (err instanceof Error && err.name !== 'AbortError') console.warn("Server unavailable, using local state", err);
       }
@@ -181,19 +213,37 @@ export function useJewelryStudio() {
       }
     });
 
-    socket.on('stateUpdate', (data) => {
+    socket.on('stateUpdate', async (data) => {
       if (data?.currentIndex !== undefined) {
-        setCurrentIndex(data.currentIndex);
-        // If the update is for an image on a different page, refresh the assets
-        const neededPage = Math.floor(data.currentIndex / imagesPerPage) + 1;
+        const newIdx = data.currentIndex;
+        setCurrentIndex(newIdx);
+        
+        // Calculate the page that contains the new index
+        const neededPage = Math.floor(newIdx / imagesPerPage) + 1;
+        
+        // If it's a different page, fetch it. If it's the same page, we can use storedImagesRef.
+        let imagesToUse = storedImagesRef.current;
         if (neededPage !== currentPageRef.current) {
-          refreshAssets(neededPage);
+          imagesToUse = await refreshAssets(neededPage);
+        }
+        
+        // Sync the URL
+        const localIdx = newIdx % imagesPerPage;
+        if (newIdx === -1) {
+          setCurrentImageUrl(undefined);
+        } else if (imagesToUse[localIdx]) {
+          setCurrentImageUrl(imagesToUse[localIdx]);
         }
       }
       if (data?.total !== undefined) setTotalImages(Number(data.total));
     });
-    socket.on('libraryUpdate', () => refreshAssets(currentPageRef.current));
+    socket.on('libraryUpdate', () => {
+      if (!isUploadingPhotosRef.current) {
+        refreshAssets(currentPageRef.current);
+      }
+    });
     socket.on('uploadProgress', (data) => {
+      console.log("Upload Progress:", data);
       setUploadProgress(data);
       if (data.completed === data.total) {
         setTimeout(() => { refreshAssets(currentPageRef.current); setUploadProgress(null); }, 1000);
@@ -214,7 +264,8 @@ export function useJewelryStudio() {
       socket.off('uploadProgress');
       socket.off('syncProgress');
       socket.off('syncComplete');
-      socket.disconnect(); // Proper cleanup to prevent leaks
+      socket.disconnect(); 
+      socketRef.current = null; // Clear ref to allow recreation if needed
     };
   }, [refreshAssets, showToast, imagesPerPage]);
 
@@ -233,25 +284,31 @@ export function useJewelryStudio() {
 
   const handleGenerate = async () => {
     if (!rates.gold1g || parseFloat(rates.gold1g) <= 0) return showToast("Enter Gold Price", 'warning');
-    if (storedImages.length === 0) return showToast("Upload an artwork first", 'warning');
+    if (totalImages === 0 && storedImages.length === 0) return showToast("Upload an artwork first", 'warning');
     setIsGenerating(true);
     const total = totalImages || storedImages.length;
     const nextIdx = total === 0 ? 0 : currentIndex === -1 ? 0 : (currentIndex + 1) % total;
 
     // Auto-Pagination Logic
     const nextPageNeeded = Math.floor(nextIdx / imagesPerPage) + 1;
+    let finalImages = storedImages;
     if (nextPageNeeded !== currentPageRef.current && nextPageNeeded <= totalPages) {
       currentPageRef.current = nextPageNeeded;
       setCurrentPage(nextPageNeeded);
-      await refreshAssets(nextPageNeeded);
+      finalImages = await refreshAssets(nextPageNeeded);
     } else if (nextIdx === 0 && totalPages > 1 && currentPageRef.current !== 1) {
       // Loop back to page 1 seamlessly
       currentPageRef.current = 1;
       setCurrentPage(1);
-      await refreshAssets(1);
+      finalImages = await refreshAssets(1);
     }
 
     setCurrentIndex(nextIdx);
+    const localIdx = nextIdx % imagesPerPage;
+    if (finalImages[localIdx]) {
+      setCurrentImageUrl(finalImages[localIdx]);
+    }
+    
     setIsExportEnabled(true);
     setIsGenerating(false);
 
@@ -284,6 +341,7 @@ export function useJewelryStudio() {
 
   const onUploadPhotos = async (files: FileList) => {
     setIsUploadingPhotos(true);
+    isUploadingPhotosRef.current = true;
     setUploadProgress({ completed: 0, total: files.length, message: 'Starting upload...' });
     try {
       const batchSize = 10;
@@ -299,12 +357,19 @@ export function useJewelryStudio() {
         setUploadProgress({ completed: uploadedCount, total: files.length, message: `Uploaded ${uploadedCount}/${files.length} images` });
       }
       await new Promise(resolve => setTimeout(resolve, 2000));
-      await refreshAssets(currentPageRef.current);
+      
+      // Refresh to get latest totals and then jump to the last page
+      const res = await fetch(`${API_URL}/api/image-library?page=1&limit=20`);
+      const data = await res.json();
+      const lastPage = data.pagination?.pages || 1;
+      
+      await refreshAssets(lastPage);
       showToast(`Successfully uploaded ${files.length} photos!`, "success");
     } catch (err: unknown) {
       showToast(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`, "error");
     } finally {
       setIsUploadingPhotos(false);
+      isUploadingPhotosRef.current = false;
       setUploadProgress(null);
     }
   };
@@ -312,24 +377,43 @@ export function useJewelryStudio() {
   const onSelectImage = (localIndex: number) => {
     const globalIdx = (currentPageRef.current - 1) * imagesPerPage + localIndex;
     setCurrentIndex(globalIdx);
+    if (storedImages[localIndex]) {
+      setCurrentImageUrl(storedImages[localIndex]);
+    }
   };
 
   const handleDeleteImage = async (src: string) => {
     const id = src.split('/').pop();
     if (!id) return;
     try {
+      const wasSelected = currentImageUrl === src;
       const res = await fetch(`${API_URL}/api/images/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed on server');
+      
       // Refresh from server — source of truth
-      await refreshAssets(currentPageRef.current);
-      // Clamp index to new total
+      const newImages = await refreshAssets(currentPageRef.current);
+      
+      // Update local state and selection
       setTotalImages(prev => {
         const newTotal = Math.max(0, prev - 1);
-        setCurrentIndex(ci => newTotal === 0 ? -1 : Math.min(ci, newTotal - 1));
+        const newIdx = newTotal === 0 ? -1 : Math.min(currentIndex, newTotal - 1);
+        setCurrentIndex(newIdx);
+        
+        if (wasSelected) {
+          if (newIdx === -1) {
+            setCurrentImageUrl(undefined);
+          } else {
+            // Sync with the image now at the same position (clamped)
+            const localIdx = newIdx % imagesPerPage;
+            setCurrentImageUrl(newImages[localIdx]);
+          }
+        }
         return newTotal;
       });
+      
       showToast('Image Deleted', 'success');
-    } catch {
+    } catch (err) {
+      console.error("Delete failed:", err);
       showToast('Delete Failed', 'error');
       await refreshAssets(currentPageRef.current);
     }
@@ -368,12 +452,14 @@ export function useJewelryStudio() {
     }
   };
 
-  const handleReset = () => { setCurrentIndex(-1); showToast('Selection reset', 'success'); };
+  const handleReset = () => { 
+    setCurrentIndex(-1); 
+    setCurrentImageUrl(undefined);
+    showToast('Selection reset', 'success'); 
+  };
 
-  // Derive currentImage — always in sync, no stale state
-  const currentImage = storedImages.length > 0 && currentIndex >= 0
-    ? storedImages[currentIndex % imagesPerPage] // Must use imagesPerPage to extract local index from global.
-    : undefined;
+  // currentImage is now sticky based on URL, not index % 20
+  const currentImage = currentImageUrl;
 
   return {
     rates, setGoldPrice, setGold8Price, setSilverPrice,
