@@ -13,7 +13,8 @@ router.get('/price', async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM prices ORDER BY updated_at DESC LIMIT 1');
     res.json(rows[0] || {});
   } catch (err) {
-    res.status(500).json({ error: 'Failed', details: err.message });
+    console.error('Price GET Error:', err);
+    res.status(500).json({ error: 'Failed to fetch price', details: err.message });
   }
 });
 
@@ -52,7 +53,12 @@ router.get('/studio-state', async (req, res) => {
       await pool.query('UPDATE studio_state SET current_index=$1 WHERE id=$2', [safeIndex, state.id]);
     res.json({ ...state, current_index: safeIndex, total });
   } catch (err) {
-    res.status(500).json({ error: 'Failed', details: err.message });
+    console.error('Studio State GET Error:', err);
+    res.status(500).json({ 
+      error: 'Failed to fetch studio state', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 

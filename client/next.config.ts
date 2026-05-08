@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        assert: require.resolve('assert/'),
+        buffer: require.resolve('buffer/'),
+      };
+    }
+    return config;
+  },
   async rewrites() {
     return [
       {

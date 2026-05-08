@@ -71,7 +71,12 @@ router.get('/image-library', async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to load image library', details: err.message });
+    console.error('Library Load Error:', err);
+    res.status(500).json({ 
+      error: 'Failed to load image library', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+    });
   }
 });
 
@@ -199,7 +204,12 @@ router.post('/sync-images', async (req, res) => {
 
     res.json({ message, total, removed });
   } catch (err) {
-    res.status(500).json({ error: 'Sync failed', details: err.message });
+    console.error('Sync Error:', err);
+    res.status(500).json({ 
+      error: 'Sync failed', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 

@@ -34,17 +34,25 @@ app.get('/health', (req, res) => res.json({ status: 'OK' }));
 async function initializeDatabase() {
   try {
     console.log('⏳ Connecting to PostgreSQL (Neon)...');
+    console.log('🔗 URL:', process.env.DATABASE_URL ? 'Defined (Hidden)' : 'MISSING');
     await pool.query('SELECT 1');
     console.log('✅ PostgreSQL connected');
 
     console.log('⏳ Running database initializations...');
+    console.log('   -> Initializing Images...');
     await initImages();
+    console.log('   -> Initializing Prices...');
     await initPrices();
+    console.log('   -> Initializing Studio State...');
     await initStudio();
+    console.log('   -> Running AutoSync...');
     await autoSync();
     console.log('✅ All systems initialized');
   } catch (err) {
-    console.error('❌ Database initialization failed:', err.message);
+    console.error('❌ Database initialization failed!');
+    console.error('   Error Name:', err.name);
+    console.error('   Error Message:', err.message);
+    console.error('   Error Stack:', err.stack);
     console.error('⚠️ The server is running but database-dependent features may fail.');
   }
 }
