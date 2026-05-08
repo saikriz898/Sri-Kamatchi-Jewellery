@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export default function Navbar() {
   const [activeTab, setActiveTab] = useState<"GOLD" | "SILVER">("GOLD");
@@ -16,10 +17,13 @@ export default function Navbar() {
 
       {/* Center section - Logo */}
       <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
-        <img 
+        <Image 
           src="/Logo-main.png" 
           alt="Sri Kamatchi Jewellery" 
           className="h-12 w-auto object-contain brightness-110 drop-shadow-[0_0_15px_rgba(184,134,11,0.2)]"
+          width={200}
+          height={48}
+          priority
         />
       </div>
 

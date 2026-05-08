@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import {
   Upload, Sparkles, Download, MessageSquare,
   RefreshCw, Loader2, Calendar, CheckCircle2,
@@ -108,7 +109,7 @@ export default function PriceEditor({
         <div className="px-10 pt-12 pb-6 flex flex-col gap-8 relative z-10">
           <div className="flex items-center justify-between">
             <div className="relative group">
-              <img src="/Logo-main.png" alt="Sri Kamatchi" className="w-40 h-auto drop-shadow-[0_0_20px_rgba(184,134,11,0.3)] transition-transform duration-500 group-hover:scale-105" />
+              <Image src="/Logo-main.png" alt="Sri Kamatchi" width={160} height={40} className="w-40 h-auto drop-shadow-[0_0_20px_rgba(184,134,11,0.3)] transition-transform duration-500 group-hover:scale-105" priority />
               <div className="absolute -inset-4 bg-[#b8860b]/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </div>
             <div className="flex items-center bg-black/40 backdrop-blur-xl p-1.5 rounded-2xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
@@ -330,12 +331,15 @@ export default function PriceEditor({
                       onClick={() => onSelectImage(idx)}
                       className={`aspect-[4/5] rounded-[28px] overflow-hidden bg-white/5 border transition-all duration-700 relative group cursor-pointer ${isActive ? 'border-[#b8860b] shadow-[0_0_30px_rgba(184,134,11,0.3)] scale-[1.02] z-20' : 'border-white/5 opacity-40 hover:opacity-100 hover:border-white/20 hover:scale-[1.02]'}`}
                     >
-                      <img
+                      <Image
                         src={src}
                         className={`w-full h-full object-cover transition-transform duration-1000 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
                         loading="lazy"
                         decoding="async"
                         alt="product"
+                        width={200}
+                        height={250}
+                        unoptimized
                       />
                       <div className="absolute top-4 left-4 px-3 py-1 bg-black/60 backdrop-blur-xl rounded-xl border border-white/10 shadow-xl">
                         <span className="text-[9px] font-black text-[#b8860b] tracking-wider">#{idx + 1}</span>

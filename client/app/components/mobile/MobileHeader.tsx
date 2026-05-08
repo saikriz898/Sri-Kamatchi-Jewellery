@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface MobileHeaderProps {
   logoImg: string;
@@ -10,7 +11,7 @@ export default function MobileHeader({ logoImg, metalMode, setMetalMode }: Mobil
   return (
     <header className="flex-shrink-0 flex items-center justify-between px-4 h-16 border-b border-yellow-900/30 bg-black/40 backdrop-blur-md z-30">
       <div className="flex-1">
-        <img src={logoImg} alt="Logo" className="h-8 w-auto object-contain" />
+        <Image src={logoImg} alt="Logo" width={80} height={32} className="h-8 w-auto object-contain" priority />
       </div>
 
       {/* Metal Mode Miniature Toggle */}

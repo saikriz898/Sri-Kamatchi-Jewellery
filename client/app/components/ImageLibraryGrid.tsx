@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface ImageLibraryGridProps {
   images: string[];
@@ -51,12 +52,15 @@ export default function ImageLibraryGrid({
             }`}
           >
             <div onClick={() => onSelectImage(idx)} className="w-full h-full">
-              <img
+              <Image
                 src={img}
                 className="w-full h-full object-cover"
                 alt="jewelry"
                 loading="lazy"
                 decoding="async"
+                width={400}
+                height={500}
+                unoptimized
               />
             </div>
 
