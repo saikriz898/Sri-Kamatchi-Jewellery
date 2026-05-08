@@ -68,21 +68,21 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
     >
       {imageUrl ? (
         <div className="absolute inset-0">
-          {/* Blurred background layer to fill gaps for non-9:16 images */}
+          {/* Enhanced blurred background layer to fill gaps with jewelry colors */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center opacity-40 blur-2xl scale-110"
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-70 blur-3xl scale-125"
             aria-hidden="true"
             crossOrigin="anonymous"
           />
-          {/* Main product image - cover to fill the 9:16 frame perfectly */}
+          {/* Main product image - contained to ensure the whole piece is visible, centered in the open space */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt="Jewellery"
-            className="absolute inset-0 h-full w-full object-cover object-center z-10"
+            className="absolute inset-x-0 top-[15vh] bottom-[30vh] w-full h-[55vh] object-contain object-center z-10 px-[3vh]"
             crossOrigin="anonymous"
           />
         </div>
