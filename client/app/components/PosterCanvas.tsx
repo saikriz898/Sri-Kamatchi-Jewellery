@@ -59,8 +59,8 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
       id="poster-canvas-area"
       className={`relative overflow-hidden text-white ${isExporting ? 'rounded-none' : 'rounded-2xl'}`}
       style={{
-        width: 'min(calc(85vh * 9 / 16), 90vw)',
-        height: 'calc(min(calc(85vh * 9 / 16), 90vw) * 16 / 9)',
+        width: 'min(calc(90vh * 9 / 16), 95vw)',
+        height: 'calc(min(calc(90vh * 9 / 16), 95vw) * 16 / 9)',
         aspectRatio: '9 / 16',
         background: '#120803',
         fontFamily: CINZEL,
@@ -77,12 +77,12 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
             aria-hidden="true"
             crossOrigin="anonymous"
           />
-          {/* Main product image - contained to ensure the whole piece is visible, centered in the open space */}
+          {/* Main product image - optimized fit for the vertical space */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt="Jewellery"
-            className="absolute inset-x-0 top-[15vh] bottom-[30vh] w-full h-[55vh] object-contain object-center z-10 px-[3vh]"
+            className="absolute inset-x-0 top-[14vh] bottom-[28vh] w-full h-[58vh] object-contain object-center z-10 px-[2vh]"
             crossOrigin="anonymous"
           />
         </div>

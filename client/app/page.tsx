@@ -170,7 +170,7 @@ export default function Home() {
       </div>
 
       <div className="relative h-full flex z-10">
-        <section className="h-full border-r border-white/5 bg-black/40 backdrop-blur-xl">
+        <section className="h-full border-r border-white/5 bg-transparent backdrop-blur-xl">
           <PriceEditor
             rates={rates}
             setGoldPrice={setGoldPrice}
@@ -223,7 +223,7 @@ export default function Home() {
 
           <div className="relative group">
             <div className="absolute -inset-4 bg-gradient-to-br from-white/[0.03] to-transparent rounded-[40px] blur-sm opacity-50 pointer-events-none border border-white/5" />
-            <div className="relative z-10 shadow-[0_40px_100px_-20px_rgba(0,0,0,1)] bg-black rounded-[24px] overflow-hidden">
+            <div className="relative z-10 shadow-[0_40px_100px_-20px_rgba(0,0,0,1.0)] rounded-[24px] overflow-hidden">
               <PosterCanvas
                 ref={posterRef}
                 rates={rates}
