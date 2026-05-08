@@ -29,6 +29,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', imageRoutes);
 app.use('/api', priceRoutes);
 
+app.get('/api/debug-db', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'Connected', url: process.env.DATABASE_URL ? 'Defined' : 'Missing' });
+  } catch (err) {
+    res.status(500).json({ 
+      status: 'Failed', 
+      error: err.message,
+      url: process.env.DATABASE_URL ? 'Defined' : 'Missing',
+      stack: err.stack 
+    });
+  }
+});
+
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
 async function initializeDatabase() {
