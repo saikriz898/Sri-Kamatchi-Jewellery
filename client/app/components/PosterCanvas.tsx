@@ -1,7 +1,6 @@
 "use client";
 
 import React, { forwardRef } from 'react';
-import Image from 'next/image';
 
 const CINZEL = "var(--font-cinzel), serif";
 const TAMIL = "var(--font-noto-tamil), serif";
@@ -70,25 +69,21 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
       {imageUrl ? (
         <div className="absolute inset-0">
           {/* Blurred background layer to fill gaps for non-9:16 images */}
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={imageUrl}
             alt=""
             className="absolute inset-0 h-full w-full object-cover object-center opacity-40 blur-2xl scale-110"
             aria-hidden="true"
             crossOrigin="anonymous"
-            fill
-            unoptimized
           />
           {/* Main product image - contained to ensure no edges are cut off */}
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={imageUrl}
             alt="Jewellery"
             className="absolute inset-0 h-full w-full object-contain object-center z-10"
-            loading="eager"
-            decoding="sync"
             crossOrigin="anonymous"
-            fill
-            unoptimized
           />
         </div>
       ) : (
@@ -132,25 +127,21 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
       />
 
       <header className="absolute left-0 right-0 top-0 z-20 flex flex-col items-center pt-[3vh]">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/Logo_top.png"
           alt="Sri Kamatchi"
           className="object-contain drop-shadow-[0_6px_24px_rgba(184,134,11,0.45)]"
           style={{ height: '11.5vh', width: 'auto' }}
           crossOrigin="anonymous"
-          priority
-          width={150}
-          height={120}
         />
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/Logo-main.png"
           alt="Sri Kamatchi Jewellery"
           className="object-contain drop-shadow-[0_4px_18px_rgba(184,134,11,0.35)]"
           style={{ width: '72%', height: 'auto', marginTop: '0.5vh' }}
           crossOrigin="anonymous"
-          priority
-          width={400}
-          height={80}
         />
       </header>
 

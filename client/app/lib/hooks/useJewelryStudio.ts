@@ -44,12 +44,10 @@ export function useJewelryStudio() {
       const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string }) => {
         const rawUrl = img.compressedUrl || img.imageUrl || "";
         if (!rawUrl) return "";
+        // Keep it relative to the origin to allow Next.js proxying (avoids Mixed Content issues)
+        if (rawUrl.startsWith('/api')) return rawUrl;
         if (rawUrl.startsWith('http')) return rawUrl;
-        
-        // Ensure absolute URL to avoid proxy issues on mobile
-        const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
-        const path = rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
-        return `${baseUrl}${path}`;
+        return rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
       }).filter((url: string) => Boolean(url));
       
       setStoredImages(imgs);
