@@ -77,12 +77,13 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
             aria-hidden="true"
             crossOrigin="anonymous"
           />
-          {/* Main product image - perfectly fills the 9:16 frame for a professional full-bleed look */}
+          {/* Main product image - perfectly framed within the gold border */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt="Jewellery"
-            className="absolute inset-0 w-full h-full object-cover object-center z-10"
+            className="absolute inset-[1.5%] w-[97%] h-[97%] object-cover object-center z-10"
+            style={{ borderRadius: 'min(1.2vh, 10px)' }}
             crossOrigin="anonymous"
           />
         </div>
@@ -110,7 +111,7 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
       />
 
       <div
-        className="absolute inset-[1.35%] z-10 pointer-events-none"
+        className="absolute inset-[1.35%] z-20 pointer-events-none"
         style={{
           border: '2px solid rgba(183,136,36,0.9)',
           borderRadius: '12px',
@@ -119,14 +120,14 @@ const PosterCanvasGold = forwardRef<HTMLDivElement, PosterCanvasGoldProps>(funct
       />
 
       <div
-        className="absolute inset-[2.15%] z-10 pointer-events-none"
+        className="absolute inset-[2.15%] z-20 pointer-events-none"
         style={{
           border: '1px solid rgba(235,193,106,0.16)',
           borderRadius: '9px',
         }}
       />
 
-      <header className="absolute left-0 right-0 top-0 z-20 flex flex-col items-center pt-[3vh]">
+      <header className="absolute left-0 right-0 top-0 z-30 flex flex-col items-center pt-[3vh]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/Logo_top.png"
