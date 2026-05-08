@@ -31,19 +31,26 @@ app.use('/api', priceRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
-async function start() {
+async function initializeDatabase() {
   try {
+    console.log('⏳ Connecting to PostgreSQL (Neon)...');
     await pool.query('SELECT 1');
-    console.log('✅ PostgreSQL (Neon) connected');
+    console.log('✅ PostgreSQL connected');
+
+    console.log('⏳ Running database initializations...');
     await initImages();
     await initPrices();
     await initStudio();
     await autoSync();
-    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    console.log('✅ All systems initialized');
   } catch (err) {
-    console.error('❌ Database connection failed:', err.message);
-    process.exit(1);
+    console.error('❌ Database initialization failed:', err.message);
+    console.error('⚠️ The server is running but database-dependent features may fail.');
   }
 }
 
-start();
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
+  console.log(`🔗 Health check: http://0.0.0.0:${PORT}/health`);
+  initializeDatabase();
+});
