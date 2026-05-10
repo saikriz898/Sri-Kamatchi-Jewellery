@@ -2,11 +2,9 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { 
-    rejectUnauthorized: false 
-  },
-  max: 10, // Neon free tier limit
-  connectionTimeoutMillis: 30000, // Increased to 30s for Neon cold start
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 10,
+  connectionTimeoutMillis: 30000,
   idleTimeoutMillis: 30000,
 });
 
