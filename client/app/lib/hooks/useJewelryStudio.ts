@@ -6,14 +6,14 @@ export function useJewelryStudio() {
   const socketRef = useRef<Socket | null>(null);
   const currentPageRef = useRef(1);
   const isUploadingPhotosRef = useRef(false);
-  const storedImagesRef = useRef<string[]>([]);
+  const storedImagesRef = useRef<{id: number, url: string}[]>([]);
 
   const [rates, setRates] = useState({ gold1g: "", gold8g: "", silver1g: "" });
   const [date, setDate] = useState(new Date().toLocaleDateString('en-GB'));
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
   const [totalImages, setTotalImages] = useState(0);
-  const [storedImages, setStoredImages] = useState<string[]>([]);
+  const [storedImages, setStoredImages] = useState<{id: number, url: string}[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,14 +41,14 @@ export function useJewelryStudio() {
       const res = await fetch(`${API_URL}/api/image-library?page=${page}&limit=20`);
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
-      const imgs = (data.images || []).map((img: { compressedUrl?: string; imageUrl?: string }) => {
+      const imgs = (data.images || []).map((img: { id: number; compressedUrl?: string; imageUrl?: string }) => {
         const rawUrl = img.compressedUrl || img.imageUrl || "";
-        if (!rawUrl) return "";
-        // Keep it relative to the origin to allow Next.js proxying (avoids Mixed Content issues)
-        if (rawUrl.startsWith('/api')) return rawUrl;
-        if (rawUrl.startsWith('http')) return rawUrl;
-        return rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
-      }).filter((url: string) => Boolean(url));
+        const processedUrl = (rawUrl.startsWith('/api') || rawUrl.startsWith('/uploads')) ? `${API_URL}${rawUrl}` : rawUrl;
+        return {
+          id: img.id,
+          url: processedUrl
+        };
+      }).filter((img: { url: string }) => Boolean(img.url));
       
       setStoredImages(imgs);
       storedImagesRef.current = imgs;
@@ -63,7 +63,7 @@ export function useJewelryStudio() {
       if (forceSelectIndex !== undefined && forceSelectIndex >= 0) {
         const localIdx = forceSelectIndex % 20;
         if (imgs[localIdx]) {
-          setCurrentImageUrl(imgs[localIdx]);
+          setCurrentImageUrl(imgs[localIdx].url);
         }
       }
 
@@ -113,12 +113,12 @@ export function useJewelryStudio() {
         }
 
         // Calculate the page that contains the initialIndex
-        const initialPage = initialIndex >= 0 ? Math.floor(initialIndex / 20) + 1 : 1;
+        const initialPage = initialIndex >= 0 ? Math.floor(initialIndex / imagesPerPage) + 1 : 1;
         const imgs = await refreshAssets(initialPage, initialIndex);
 
         // Auto-select the first image if none is currently selected and images are available
         if (initialIndex === -1 && imgs.length > 0) {
-          setCurrentImageUrl(imgs[0]);
+          setCurrentImageUrl(imgs[0].url);
           setCurrentIndex(0);
         }
       } catch (err: unknown) {
@@ -230,7 +230,8 @@ export function useJewelryStudio() {
         if (newIdx === -1) {
           setCurrentImageUrl(undefined);
         } else if (imagesToUse[localIdx]) {
-          setCurrentImageUrl(imagesToUse[localIdx]);
+          const imgObj = imagesToUse[localIdx] as {url: string};
+          setCurrentImageUrl(imgObj.url);
         }
       }
       if (data?.total !== undefined) setTotalImages(Number(data.total));
@@ -270,7 +271,7 @@ export function useJewelryStudio() {
 
   const setGoldPrice = (val: string) => {
     const numVal = parseFloat(val.replace(/,/g, ''));
-    const gold8gVal = !isNaN(numVal) ? (numVal * 8).toString() : "";
+    const gold8gVal = !isNaN(numVal) ? Math.round(numVal * 8).toString() : "";
     setRates(prev => ({
       ...prev,
       gold1g: val,
@@ -304,24 +305,36 @@ export function useJewelryStudio() {
     setCurrentIndex(nextIdx);
     const localIdx = nextIdx % imagesPerPage;
     if (finalImages[localIdx]) {
-      setCurrentImageUrl(finalImages[localIdx]);
+      setCurrentImageUrl(finalImages[localIdx].url);
     }
     
-    setIsExportEnabled(true);
-    setIsGenerating(false);
-
-    // Lock in the rates to the DB and broadcast to all devices
+    // Lock in the rates and studio state to the DB and broadcast to all devices
     try {
-      await fetch(`${API_URL}/api/price`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...rates, date })
-      });
+      const [priceRes, stateRes] = await Promise.all([
+        fetch(`${API_URL}/api/price`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...rates, date })
+        }),
+        fetch(`${API_URL}/api/studio-state`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ currentIndex: nextIdx })
+        })
+      ]);
+
+      if (!priceRes.ok || !stateRes.ok) {
+        throw new Error("Synchronization failed");
+      }
+      
+      showToast("Poster Generated & Synced", 'success');
     } catch (err) {
-      console.error("Failed to sync rates to DB:", err);
+      console.error("Failed to sync state to DB:", err);
+      showToast("Sync Error: Local selection only", 'warning');
     }
 
-    showToast("Poster Generated & Synced", 'success');
+    setIsExportEnabled(true);
+    setIsGenerating(false);
   };
 
   const handleSyncDB = async () => {
@@ -376,15 +389,13 @@ export function useJewelryStudio() {
     const globalIdx = (currentPageRef.current - 1) * imagesPerPage + localIndex;
     setCurrentIndex(globalIdx);
     if (storedImages[localIndex]) {
-      setCurrentImageUrl(storedImages[localIndex]);
+      setCurrentImageUrl(storedImages[localIndex].url);
     }
   };
 
-  const handleDeleteImage = async (src: string) => {
-    const id = src.split('/').pop();
-    if (!id) return;
+  const handleDeleteImage = async (id: number) => {
     try {
-      const wasSelected = currentImageUrl === src;
+      const wasSelected = storedImages.find(img => img.id === id)?.url === currentImageUrl;
       const res = await fetch(`${API_URL}/api/images/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed on server');
       
@@ -403,7 +414,7 @@ export function useJewelryStudio() {
           } else {
             // Sync with the image now at the same position (clamped)
             const localIdx = newIdx % imagesPerPage;
-            setCurrentImageUrl(newImages[localIdx]);
+            setCurrentImageUrl(newImages[localIdx].url);
           }
         }
         return newTotal;

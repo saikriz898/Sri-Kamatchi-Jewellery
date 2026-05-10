@@ -31,7 +31,7 @@ interface MobileControlPanelProps {
   isDownloading: boolean;
   isSharing: boolean;
   isExportEnabled: boolean;
-  images: string[];
+  images: {id: number, url: string}[];
   currentImage?: string;
   currentIndex: number;
   totalImages: number;
@@ -39,7 +39,7 @@ interface MobileControlPanelProps {
   totalPages: number;
   goToPage: (page: number) => void;
   onSelectImage: (index: number) => void;
-  onDeleteImage: (src: string) => void;
+  onDeleteImage: (id: number) => void;
   isLoadingImages: boolean;
   imageError?: string | null;
   onUploadPhotos: (files: FileList) => void;

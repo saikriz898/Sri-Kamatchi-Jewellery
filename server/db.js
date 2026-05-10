@@ -6,7 +6,7 @@ const pool = new Pool({
     rejectUnauthorized: false 
   },
   max: 10, // Neon free tier limit
-  connectionTimeoutMillis: 10000, // Wait 10s for compute to wake up
+  connectionTimeoutMillis: 30000, // Increased to 30s for Neon cold start
   idleTimeoutMillis: 30000,
 });
 

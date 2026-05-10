@@ -17,7 +17,7 @@ interface PriceEditorProps {
   setDate: (val: string) => void;
   activeMetal: 'gold' | 'silver';
   setActiveMetal: (val: 'gold' | 'silver') => void;
-  storedImages: string[];
+  storedImages: {id: number, url: string}[];
   currentIndex: number;
   totalImages: number;
   isGenerating: boolean;
@@ -46,7 +46,7 @@ interface PriceEditorProps {
   onSyncDB: () => void;
   onRefreshData: () => void;
   onSelectImage: (index: number) => void;
-  onDeleteImage: (src: string) => void;
+  onDeleteImage: (id: number) => void;
   onUploadFiles: (files: FileList) => void;
 }
 
@@ -176,7 +176,7 @@ export default function PriceEditor({
                   <div className="relative">
                     <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#b8860b] font-black text-xs italic">₹</span>
                     <input
-                      type="number" value={rates.gold1g} onChange={(e) => setGoldPrice(e.target.value)}
+                      type="text" value={rates.gold1g} onChange={(e) => setGoldPrice(e.target.value)}
                       className="w-full bg-[#050402] border border-white/[0.05] pl-10 pr-5 py-4.5 text-white font-mono text-base font-bold rounded-2xl focus:outline-none focus:border-[#b8860b]/30 transition-all"
                     />
                   </div>
@@ -199,7 +199,7 @@ export default function PriceEditor({
                 <div className="relative">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#b8860b] font-black text-xs italic">₹</span>
                   <input
-                    type="number" value={rates.silver1g} onChange={(e) => setSilverPrice(e.target.value)}
+                    type="text" value={rates.silver1g} onChange={(e) => setSilverPrice(e.target.value)}
                     className="w-full bg-[#050402] border border-white/[0.05] pl-10 pr-5 py-4.5 text-white font-mono text-base font-bold rounded-2xl focus:outline-none focus:border-[#b8860b]/30 transition-all"
                   />
                 </div>
@@ -322,17 +322,17 @@ export default function PriceEditor({
                   </p>
                 </div>
               ) : (
-                storedImages.map((src, idx) => {
+                storedImages.map((img, idx) => {
                   const globalIdx = (currentPage - 1) * imagesPerPage + idx;
                   const isActive = totalImages > 0 && safeIndex === globalIdx;
                   return (
                     <div
-                      key={`${src}-${idx}`}
+                      key={`${img.id}-${idx}`}
                       onClick={() => onSelectImage(idx)}
                       className={`aspect-[4/5] rounded-[28px] overflow-hidden bg-white/5 border transition-all duration-700 relative group cursor-pointer ${isActive ? 'border-[#b8860b] shadow-[0_0_30px_rgba(184,134,11,0.3)] scale-[1.02] z-20' : 'border-white/5 opacity-40 hover:opacity-100 hover:border-white/20 hover:scale-[1.02]'}`}
                     >
                       <Image
-                        src={src}
+                        src={img.url}
                         className={`w-full h-full object-cover transition-transform duration-1000 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
                         loading="lazy"
                         decoding="async"
@@ -347,7 +347,7 @@ export default function PriceEditor({
 
                       <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 z-30">
                         <button
-                          onClick={(e) => { e.stopPropagation(); onDeleteImage(src); }}
+                          onClick={(e) => { e.stopPropagation(); onDeleteImage(img.id); }}
                           className="w-8 h-8 flex items-center justify-center bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all backdrop-blur-xl cursor-pointer shadow-lg border border-red-500/20"
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>

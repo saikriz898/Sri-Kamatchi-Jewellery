@@ -20,21 +20,29 @@ router.get('/price', async (req, res) => {
 
 // POST /api/price — always upsert single row
 router.post('/price', async (req, res) => {
+  const client = await pool.connect();
   try {
     const { gold1g, gold8g, silver1g, date } = req.body;
 
+    await client.query('BEGIN');
     // Delete all old rows, insert fresh one — simple single-row upsert
-    await pool.query('DELETE FROM prices');
-    const { rows } = await pool.query(
+    await client.query('DELETE FROM prices');
+    const { rows } = await client.query(
       `INSERT INTO prices (gold1g, gold8g, silver1g, date, updated_at)
        VALUES ($1,$2,$3,$4,NOW()) RETURNING *`,
       [gold1g || '', gold8g || '', silver1g || '', date || '']
     );
     const price = rows[0];
+    await client.query('COMMIT');
+
     emitSafe('priceUpdate', price);
     res.json(price);
   } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Price Update Error:', err);
     res.status(500).json({ error: 'Update failed', details: err.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -51,7 +59,7 @@ router.get('/studio-state', async (req, res) => {
     const safeIndex = total === 0 ? -1 : Math.min(state.current_index, total - 1);
     if (safeIndex !== state.current_index)
       await pool.query('UPDATE studio_state SET current_index=$1 WHERE id=$2', [safeIndex, state.id]);
-    res.json({ ...state, current_index: safeIndex, total });
+    res.json({ ...state, currentIndex: safeIndex, total });
   } catch (err) {
     console.error('Studio State GET Error:', err);
     res.status(500).json({ 

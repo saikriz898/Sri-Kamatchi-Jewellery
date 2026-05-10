@@ -2,14 +2,14 @@ import React from 'react';
 import Image from 'next/image';
 
 interface ImageLibraryGridProps {
-  images: string[];
+  images: {id: number, url: string}[];
   currentImage?: string;
   onSelectImage: (index: number) => void;
-  onDeleteImage?: (src: string) => void;
+  onDeleteImage: (id: number) => void;
   isLoading?: boolean;
   error?: string | null;
   columnsClassName?: string;
-  canDeleteImage?: (src: string) => boolean; // dynamic deletion gate
+  canDeleteImage?: (id: number) => boolean; // dynamic deletion gate
 }
 
 export default function ImageLibraryGrid({
@@ -41,10 +41,10 @@ export default function ImageLibraryGrid({
   return (
     <div className={`grid ${columnsClassName} gap-3 px-1`}>
       {images.map((img, idx) => {
-        const isActive = currentImage === img;
+        const isActive = currentImage === img.url;
         return (
           <div
-            key={img}
+            key={img.id}
             className={`relative aspect-[4/5] rounded-2xl overflow-hidden border-2 transition-all active:scale-95 cursor-pointer ${
               isActive
                 ? 'border-yellow-500 shadow-lg shadow-yellow-900/40 scale-95'
@@ -53,7 +53,7 @@ export default function ImageLibraryGrid({
           >
             <div onClick={() => onSelectImage(idx)} className="w-full h-full">
               <Image
-                src={img}
+                src={img.url}
                 className="w-full h-full object-cover"
                 alt="jewelry"
                 loading="lazy"
@@ -69,11 +69,11 @@ export default function ImageLibraryGrid({
             </div>
 
             {/* Delete only shown when caller wants it & image is deletable */}
-            {onDeleteImage && canDeleteImage && canDeleteImage(img) && (
+            {onDeleteImage && canDeleteImage && canDeleteImage(img.id) && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (confirm('Delete this image?')) onDeleteImage(img);
+                  if (confirm('Delete this image?')) onDeleteImage(img.id);
                 }}
                 className="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-600 rounded-lg text-white shadow-lg transition-colors"
               >

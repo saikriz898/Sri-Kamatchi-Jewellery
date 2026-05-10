@@ -29,14 +29,14 @@ interface MobileEditorProps {
   handleReset: () => void;
   handleSyncDB: () => void;
   isSyncing: boolean;
-  images: string[];
+  images: {id: number, url: string}[];
   currentIndex: number;
   totalImages: number;
   currentPage: number;
   totalPages: number;
   goToPage: (page: number) => void;
   onSelectImage: (index: number) => void;
-  onDeleteImage: (src: string) => void;
+  onDeleteImage: (id: number) => void;
   isLoadingImages: boolean;
   imageError?: string | null;
   onUploadPhotos: (files: FileList) => void;

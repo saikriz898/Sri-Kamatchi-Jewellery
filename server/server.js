@@ -71,8 +71,12 @@ async function initializeDatabase() {
   }
 }
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
-  console.log(`🔗 Health check: http://0.0.0.0:${PORT}/health`);
-  initializeDatabase();
-});
+async function startServer() {
+  await initializeDatabase();
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server listening on port ${PORT}`);
+    console.log(`🔗 Health check: http://0.0.0.0:${PORT}/health`);
+  });
+}
+
+startServer();
