@@ -106,6 +106,7 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
       saved.push(rows[0]);
     }
 
+    console.log(`✅ Uploaded ${saved.length} images to ImageKit.`);
     const { rows: countRows } = await pool.query('SELECT COUNT(*) FROM images');
     emitSafe('uploadProgress', { completed: saved.length, total: req.files.length });
     emitSafe('libraryUpdate', { total: parseInt(countRows[0].count), newImages: saved.length });
@@ -119,7 +120,11 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
       })),
     });
   } catch (err) {
-    console.error('Upload error:', err);
+    console.error('❌ UPLOAD CRASHED:', {
+      message: err.message,
+      stack: err.stack,
+      imagekit_configured: !!process.env.IMAGEKIT_PRIVATE_KEY
+    });
     res.status(500).json({ error: 'Upload failed', details: err.message });
   }
 });
