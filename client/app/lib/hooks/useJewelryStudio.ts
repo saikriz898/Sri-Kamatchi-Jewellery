@@ -456,7 +456,9 @@ export function useJewelryStudio() {
           } else {
             // Sync with the image now at the same position (clamped)
             const localIdx = newIdx % imagesPerPage;
-            setCurrentImageUrl(newImages[localIdx].url);
+            if (initialImages[localIdx]) {
+              setCurrentImageUrl(initialImages[localIdx].url);
+            }
           }
         }
         return newTotal;
