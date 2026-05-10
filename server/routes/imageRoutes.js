@@ -43,7 +43,7 @@ router.get('/test-imagekit', async (req, res) => {
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { files: 50, fileSize: 25 * 1024 * 1024 }, // Increased for high-quality jewelry images
+  limits: { files: 50, fileSize: 100 * 1024 * 1024 }, // Supported for ultra-high-res professional photography
   fileFilter: (_req, file, cb) => {
     if (/\.(jpg|jpeg|png|webp|gif)$/i.test(file.originalname)) return cb(null, true);
     cb(new Error('Only image files are allowed'));
