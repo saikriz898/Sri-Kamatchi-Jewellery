@@ -350,7 +350,7 @@ export function useJewelryStudio() {
     }
   };
 
-  const handleUploadPhotos = async (files: FileList) => {
+  const onUploadPhotos = async (files: FileList) => {
     if (files.length === 0 || isUploadingPhotos) return;
     setIsUploadingPhotos(true);
     setUploadProgress(0);
