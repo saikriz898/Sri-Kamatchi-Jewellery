@@ -364,7 +364,10 @@ export function useJewelryStudio() {
         
         // 1. Get Authentication Parameters from our backend
         const authRes = await fetch(`${API_URL}/api/auth`);
-        if (!authRes.ok) throw new Error('Failed to get upload authorization');
+        if (!authRes.ok) {
+          const authError = await authRes.json();
+          throw new Error(authError.details || authError.error || 'Failed to get upload authorization');
+        }
         const { signature, expire, token } = await authRes.json();
 
         // 2. Upload directly to ImageKit

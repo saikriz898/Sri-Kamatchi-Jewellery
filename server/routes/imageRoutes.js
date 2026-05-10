@@ -25,8 +25,20 @@ async function reorderImages() {
 
 // ImageKit Authentication Route (For Direct Client-Side Uploads)
 router.get('/auth', (req, res) => {
-  const result = imagekit.getAuthenticationParameters();
-  res.send(result);
+  try {
+    if (!process.env.IMAGEKIT_PRIVATE_KEY || !process.env.IMAGEKIT_PUBLIC_KEY) {
+      console.error('❌ IMAGEKIT_PRIVATE_KEY or PUBLIC_KEY is missing in environment variables');
+      return res.status(500).json({ 
+        error: 'ImageKit is not configured on the server',
+        details: 'Missing private or public key' 
+      });
+    }
+    const result = imagekit.getAuthenticationParameters();
+    res.send(result);
+  } catch (err) {
+    console.error('❌ ImageKit Auth Error:', err);
+    res.status(500).json({ error: 'Failed to generate auth parameters', details: err.message });
+  }
 });
 
 // Diagnostic Route
