@@ -33,7 +33,7 @@ router.get('/auth', (req, res) => {
         details: 'Missing private or public key' 
       });
     }
-    const result = imagekit.getAuthenticationParameters();
+    const result = imagekit.helper.getAuthenticationParameters();
     res.send(result);
   } catch (err) {
     console.error('❌ ImageKit Auth Error:', err);
