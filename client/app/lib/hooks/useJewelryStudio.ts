@@ -127,7 +127,7 @@ export function useJewelryStudio() {
     }
     hydrate();
     return () => controller.abort();
-  }, [refreshAssets]);
+  }, [refreshAssets, imagesPerPage]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -404,9 +404,9 @@ export function useJewelryStudio() {
       
       await refreshAssets(1); // Refresh library
       showToast(`Successfully uploaded ${files.length} photos!`, "success");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Upload Error:', err);
-      showToast(`Upload failed: ${err.message}`, "error");
+      showToast(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`, "error");
     } finally {
       setIsUploadingPhotos(false);
       setUploadProgress(null);

@@ -38,7 +38,7 @@ interface PriceEditorProps {
   nextPage: () => void;
   prevPage: () => void;
   // Upload progress
-  uploadProgress: { completed: number; total: number; message: string } | null;
+  uploadProgress: number | null;
   onGenerate: () => void;
   onExport: () => void;
   onBackToGenerate: () => void;
@@ -232,7 +232,7 @@ export default function PriceEditor({
                   {isUploading ? 'Securing Files...' : 'Drop Artwork Here'}
                 </span>
                 <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest group-hover:text-white/40 transition-colors">
-                  JPG, PNG, WEBP (Max 10MB)
+                  JPG, PNG, WEBP (Max 100MB)
                 </span>
               </div>
               <input
@@ -243,28 +243,28 @@ export default function PriceEditor({
           </section>
 
           {/* Upload Progress */}
-          {uploadProgress && (
+          {uploadProgress !== null && (
             <section className="space-y-3">
               <div className="flex items-center gap-3 px-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Upload Progress</h2>
+                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Cloud Sync Active</h2>
               </div>
               <div className="bg-black/20 border border-green-500/20 rounded-[20px] p-4 backdrop-blur-md">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-green-400 uppercase tracking-widest">
-                    {uploadProgress.completed}/{uploadProgress.total} Images
+                    Transmitting...
                   </span>
-                  <span className="text-[8px] text-green-300/60">
-                    {uploadProgress.total > 0 ? Math.round((uploadProgress.completed / uploadProgress.total) * 100) : 0}%
+                  <span className="text-[8px] text-green-300/60 font-mono">
+                    {uploadProgress}%
                   </span>
                 </div>
-                <div className="w-full bg-green-500/10 rounded-full h-2 mb-2">
+                <div className="w-full bg-green-500/10 rounded-full h-1.5 mb-2 overflow-hidden">
                   <div
-                    className="bg-green-400 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${uploadProgress.total > 0 ? (uploadProgress.completed / uploadProgress.total) * 100 : 0}%` }}
+                    className="bg-gradient-to-r from-green-500 to-emerald-400 h-full rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-[9px] text-green-300/80 font-medium">{uploadProgress.message}</p>
+                <p className="text-[8px] text-green-300/40 font-bold uppercase tracking-[0.1em]">Securing Assets in Cloud Storage</p>
               </div>
             </section>
           )}
