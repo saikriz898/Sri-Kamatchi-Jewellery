@@ -26,7 +26,7 @@ async function reorderImages() {
 // Diagnostic Route
 router.get('/test-imagekit', async (req, res) => {
   try {
-    const result = await imagekit.listFiles({ limit: 1 });
+    const result = await imagekit.assets.list({ limit: 1 });
     res.json({ status: 'ImageKit Connected', filesFound: result.length });
   } catch (err) {
     res.status(500).json({ 
@@ -110,7 +110,7 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
       console.log(`⏳ Uploading ${file.originalname} (${file.size} bytes) to ImageKit...`);
       
       // Upload to ImageKit
-      const uploadResponse = await imagekit.upload({
+      const uploadResponse = await imagekit.files.upload({
         file: file.buffer,
         fileName: file.originalname,
         folder: '/jewellery/uploads',
