@@ -89,6 +89,8 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
     const saved = [];
 
     for (const file of req.files) {
+      console.log(`⏳ Uploading ${file.originalname} (${file.size} bytes) to ImageKit...`);
+      
       // Upload to ImageKit
       const uploadResponse = await imagekit.upload({
         file: file.buffer,
@@ -97,6 +99,8 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
         useUniqueFileName: true,
         tags: ['jewellery', 'gallery']
       });
+
+      console.log(`✅ ImageKit Upload Success: ${uploadResponse.url}`);
 
       const { rows } = await pool.query(
         `INSERT INTO images (image_url, "order", created_at)
