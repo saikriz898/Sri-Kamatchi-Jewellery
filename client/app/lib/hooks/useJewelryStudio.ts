@@ -19,7 +19,7 @@ export function useJewelryStudio() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [imagesPerPage] = useState(20);
-  const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number; message: string } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [activeMetal, setActiveMetal] = useState<'gold' | 'silver'>('gold');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -409,7 +409,7 @@ export function useJewelryStudio() {
       showToast(`Upload failed: ${err.message}`, "error");
     } finally {
       setIsUploadingPhotos(false);
-      setUploadProgress(0);
+      setUploadProgress(null);
     }
   };
 
