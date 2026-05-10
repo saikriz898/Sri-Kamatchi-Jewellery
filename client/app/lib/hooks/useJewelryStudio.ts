@@ -350,38 +350,66 @@ export function useJewelryStudio() {
     }
   };
 
-  const onUploadPhotos = async (files: FileList) => {
+  const handleUploadPhotos = async (files: FileList) => {
+    if (files.length === 0 || isUploadingPhotos) return;
     setIsUploadingPhotos(true);
-    isUploadingPhotosRef.current = true;
-    setUploadProgress({ completed: 0, total: files.length, message: 'Starting upload...' });
+    setUploadProgress(0);
+
     try {
-      const batchSize = 10;
-      let uploadedCount = 0;
-      for (let i = 0; i < files.length; i += batchSize) {
-        const batch = Array.from(files).slice(i, i + batchSize);
+      const fileList = Array.from(files);
+      const uploadedResults = [];
+
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        
+        // 1. Get Authentication Parameters from our backend
+        const authRes = await fetch(`${API_URL}/api/auth`);
+        if (!authRes.ok) throw new Error('Failed to get upload authorization');
+        const { signature, expire, token } = await authRes.json();
+
+        // 2. Upload directly to ImageKit
         const formData = new FormData();
-        batch.forEach(f => formData.append('photos', f));
-        const res = await fetch(`${API_URL}/api/upload-images`, { method: 'POST', body: formData });
-        if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
-        await res.json();
-        uploadedCount += batch.length;
-        setUploadProgress({ completed: uploadedCount, total: files.length, message: `Uploaded ${uploadedCount}/${files.length} images` });
+        formData.append('file', file);
+        formData.append('fileName', file.name);
+        formData.append('publicKey', 'public_D3EtpIkicxqxYhpV60PuHe/lDwc=');
+        formData.append('signature', signature);
+        formData.append('expire', expire);
+        formData.append('token', token);
+        formData.append('folder', '/jewellery/uploads');
+
+        const ikRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!ikRes.ok) {
+          const errorData = await ikRes.json();
+          throw new Error(errorData.message || 'ImageKit upload failed');
+        }
+
+        const uploadData = await ikRes.json();
+        uploadedResults.push({ url: uploadData.url, name: uploadData.name });
+        
+        setUploadProgress(Math.round(((i + 1) / fileList.length) * 100));
       }
-      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 3. Register the uploaded URLs with our backend
+      const regRes = await fetch(`${API_URL}/api/register-images`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: uploadedResults })
+      });
+
+      if (!regRes.ok) throw new Error('Failed to register images in database');
       
-      // Refresh to get latest totals and then jump to the last page
-      const res = await fetch(`${API_URL}/api/image-library?page=1&limit=20`);
-      const data = await res.json();
-      const lastPage = data.pagination?.pages || 1;
-      
-      await refreshAssets(lastPage);
+      await refreshAssets(1); // Refresh library
       showToast(`Successfully uploaded ${files.length} photos!`, "success");
-    } catch (err: unknown) {
-      showToast(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`, "error");
+    } catch (err: any) {
+      console.error('Upload Error:', err);
+      showToast(`Upload failed: ${err.message}`, "error");
     } finally {
       setIsUploadingPhotos(false);
-      isUploadingPhotosRef.current = false;
-      setUploadProgress(null);
+      setUploadProgress(0);
     }
   };
 

@@ -23,6 +23,12 @@ async function reorderImages() {
   return valid.length;
 }
 
+// ImageKit Authentication Route (For Direct Client-Side Uploads)
+router.get('/auth', (req, res) => {
+  const result = imagekit.getAuthenticationParameters();
+  res.send(result);
+});
+
 // Diagnostic Route
 router.get('/test-imagekit', async (req, res) => {
   try {
@@ -95,7 +101,36 @@ router.get('/image-library', async (req, res) => {
   }
 });
 
-// POST /api/upload-images
+// NEW: Register images that were uploaded directly from the client
+router.post('/register-images', express.json(), async (req, res) => {
+  try {
+    const { images } = req.body; // Array of { url, name }
+    if (!images || !Array.isArray(images)) return res.status(400).json({ error: 'Invalid data' });
+
+    const { rows: maxRows } = await pool.query('SELECT MAX("order") as max FROM images');
+    let nextOrder = (maxRows[0].max || 0) + 1;
+    const saved = [];
+
+    for (const img of images) {
+      const { rows } = await pool.query(
+        `INSERT INTO images (image_url, "order", created_at)
+         VALUES ($1, $2, NOW()) RETURNING id, image_url, "order"`,
+        [img.url, nextOrder++]
+      );
+      saved.push(rows[0]);
+    }
+
+    const { rows: countRows } = await pool.query('SELECT COUNT(*) FROM images');
+    emitSafe('libraryUpdate', { total: parseInt(countRows[0].count), newImages: saved.length });
+
+    res.json({ message: 'Images registered successfully', files: saved });
+  } catch (err) {
+    console.error('Registration Error:', err);
+    res.status(500).json({ error: 'Failed to register images' });
+  }
+});
+
+// POST /api/upload-images (Keep as fallback, but deprecated)
 router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0)
