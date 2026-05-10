@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import API_URL from "../config";
+import { API_URL, IMAGEKIT_PUBLIC_KEY } from "../config";
 
 export function useJewelryStudio() {
   const socketRef = useRef<Socket | null>(null);
@@ -371,7 +371,7 @@ export function useJewelryStudio() {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('fileName', file.name);
-        formData.append('publicKey', 'public_D3EtpIkicxqxYhpV60PuHe/lDwc=');
+        formData.append('publicKey', IMAGEKIT_PUBLIC_KEY);
         formData.append('signature', signature);
         formData.append('expire', expire);
         formData.append('token', token);
@@ -402,7 +402,12 @@ export function useJewelryStudio() {
 
       if (!regRes.ok) throw new Error('Failed to register images in database');
       
-      await refreshAssets(1); // Refresh library
+      // Auto-navigate to the last page to see the new images
+      const finalRes = await fetch(`${API_URL}/api/image-library?page=1&limit=1`);
+      const finalData = await finalRes.json();
+      const lastPage = finalData.pagination?.pages || 1;
+      
+      await refreshAssets(lastPage);
       showToast(`Successfully uploaded ${files.length} photos!`, "success");
     } catch (err: unknown) {
       console.error('Upload Error:', err);
@@ -428,7 +433,16 @@ export function useJewelryStudio() {
       if (!res.ok) throw new Error('Delete failed on server');
       
       // Refresh from server — source of truth
-      const newImages = await refreshAssets(currentPageRef.current);
+      let pageToLoad = currentPageRef.current;
+      const initialImages = await refreshAssets(pageToLoad);
+      
+      // If we deleted the only item on the page, go back one page
+      if (initialImages.length === 0 && pageToLoad > 1) {
+        pageToLoad -= 1;
+        currentPageRef.current = pageToLoad;
+        setCurrentPage(pageToLoad);
+        await refreshAssets(pageToLoad);
+      }
       
       // Update local state and selection
       setTotalImages(prev => {
