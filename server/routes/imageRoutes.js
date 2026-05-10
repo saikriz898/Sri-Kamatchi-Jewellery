@@ -23,6 +23,24 @@ async function reorderImages() {
   return valid.length;
 }
 
+// Diagnostic Route
+router.get('/test-imagekit', async (req, res) => {
+  try {
+    const result = await imagekit.listFiles({ limit: 1 });
+    res.json({ status: 'ImageKit Connected', filesFound: result.length });
+  } catch (err) {
+    res.status(500).json({ 
+      status: 'ImageKit Connection Failed', 
+      error: err.message,
+      configured: {
+        public: !!process.env.IMAGEKIT_PUBLIC_KEY,
+        private: !!process.env.IMAGEKIT_PRIVATE_KEY,
+        endpoint: !!process.env.IMAGEKIT_URL_ENDPOINT
+      }
+    });
+  }
+});
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { files: 50, fileSize: 25 * 1024 * 1024 }, // Increased for high-quality jewelry images
