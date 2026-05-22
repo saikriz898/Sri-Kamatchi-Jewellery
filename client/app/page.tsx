@@ -13,6 +13,7 @@ export default function Home() {
     rates, setGoldPrice, setGold8Price, setSilverPrice,
     date, setDate,
     currentImage,
+    currentImageId,
     storedImages, currentIndex, totalImages,
     isLoadingImages, imageError,
     activeMetal, setActiveMetal,
@@ -64,8 +65,15 @@ export default function Home() {
       link.download = `Sri_Kamatchi_${date.replace(/ /g, '_')}.jpg`;
       link.href = dataUrl;
       link.click();
+      let cleanupSucceeded = true;
+      if (currentImageId !== undefined) {
+        cleanupSucceeded = await handleDeleteImage(currentImageId, { silent: true });
+      }
       setIsExportEnabled(false); // Only one export per generate
-      showToast("Saved! Generate New Poster.", "success");
+      showToast(
+        cleanupSucceeded ? "Saved! Generate New Poster." : "Saved, but image could not be removed from the library",
+        cleanupSucceeded ? "success" : "warning"
+      );
     } catch (err) {
       console.error("Export failed", err);
       showToast("Download Failed", "error");

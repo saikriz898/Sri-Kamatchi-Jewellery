@@ -133,7 +133,11 @@ router.post('/register-images', express.json(), async (req, res) => {
     }
 
     const { rows: countRows } = await pool.query('SELECT COUNT(*) FROM images');
-    emitSafe('libraryUpdate', { total: parseInt(countRows[0].count), newImages: saved.length });
+    emitSafe('libraryUpdate', {
+      total: parseInt(countRows[0].count),
+      newImages: saved.length,
+      lastPage: Math.max(1, Math.ceil(parseInt(countRows[0].count) / 20)),
+    });
 
     res.json({ message: 'Images registered successfully', files: saved });
   } catch (err) {
@@ -178,7 +182,11 @@ router.post('/upload-images', upload.array('photos', 50), async (req, res) => {
     console.log(`✅ Uploaded ${saved.length} images to ImageKit.`);
     const { rows: countRows } = await pool.query('SELECT COUNT(*) FROM images');
     emitSafe('uploadProgress', { completed: saved.length, total: req.files.length });
-    emitSafe('libraryUpdate', { total: parseInt(countRows[0].count), newImages: saved.length });
+    emitSafe('libraryUpdate', {
+      total: parseInt(countRows[0].count),
+      newImages: saved.length,
+      lastPage: Math.max(1, Math.ceil(parseInt(countRows[0].count) / 20)),
+    });
 
     res.json({
       message: `Successfully uploaded ${saved.length} photos to ImageKit.`,
@@ -204,7 +212,7 @@ router.post('/sync-images', async (req, res) => {
     const total = await reorderImages();
     const message = `Sync complete: ${total} images indexed.`;
     emitSafe('syncComplete', { total, message });
-    emitSafe('libraryUpdate', { total });
+    emitSafe('libraryUpdate', { total, lastPage: Math.max(1, Math.ceil(total / 20)) });
     res.json({ message, total });
   } catch (err) {
     res.status(500).json({ error: 'Sync failed', details: err.message });
@@ -223,7 +231,7 @@ router.delete('/images/:id', async (req, res) => {
     await pool.query('DELETE FROM images WHERE id=$1', [req.params.id]);
     const total = await reorderImages();
 
-    emitSafe('libraryUpdate', { total });
+    emitSafe('libraryUpdate', { total, lastPage: Math.max(1, Math.ceil(total / 20)) });
     res.json({ message: 'Image reference removed.', total });
   } catch (err) {
     res.status(500).json({ error: 'Delete failed', details: err.message });

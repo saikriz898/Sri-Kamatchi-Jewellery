@@ -12,6 +12,7 @@ export function useJewelryStudio() {
   const [date, setDate] = useState(new Date().toLocaleDateString('en-GB'));
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
+  const [currentImageId, setCurrentImageId] = useState<number | undefined>(undefined);
   const [totalImages, setTotalImages] = useState(0);
   const [storedImages, setStoredImages] = useState<{id: number, url: string}[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(false);
@@ -64,6 +65,7 @@ export function useJewelryStudio() {
         const localIdx = forceSelectIndex % 20;
         if (imgs[localIdx]) {
           setCurrentImageUrl(imgs[localIdx].url);
+          setCurrentImageId(imgs[localIdx].id);
         }
       }
 
@@ -119,6 +121,7 @@ export function useJewelryStudio() {
         // Auto-select the first image if none is currently selected and images are available
         if (initialIndex === -1 && imgs.length > 0) {
           setCurrentImageUrl(imgs[0].url);
+          setCurrentImageId(imgs[0].id);
           setCurrentIndex(0);
         }
       } catch (err: unknown) {
@@ -229,17 +232,28 @@ export function useJewelryStudio() {
         const localIdx = newIdx % imagesPerPage;
         if (newIdx === -1) {
           setCurrentImageUrl(undefined);
+          setCurrentImageId(undefined);
         } else if (imagesToUse[localIdx]) {
-          const imgObj = imagesToUse[localIdx] as {url: string};
+          const imgObj = imagesToUse[localIdx] as {url: string; id?: number};
           setCurrentImageUrl(imgObj.url);
+          setCurrentImageId(imgObj.id);
         }
       }
       if (data?.total !== undefined) setTotalImages(Number(data.total));
     });
-    socket.on('libraryUpdate', () => {
-      if (!isUploadingPhotosRef.current) {
-        refreshAssets(currentPageRef.current);
+    socket.on('libraryUpdate', async (data) => {
+      if (isUploadingPhotosRef.current) return;
+
+      const nextPage = data?.newImages && data.lastPage
+        ? data.lastPage
+        : currentPageRef.current;
+
+      if (nextPage !== currentPageRef.current) {
+        currentPageRef.current = nextPage;
+        setCurrentPage(nextPage);
       }
+
+      await refreshAssets(nextPage);
     });
     socket.on('uploadProgress', (data) => {
       console.log("Upload Progress:", data);
@@ -306,6 +320,7 @@ export function useJewelryStudio() {
     const localIdx = nextIdx % imagesPerPage;
     if (finalImages[localIdx]) {
       setCurrentImageUrl(finalImages[localIdx].url);
+      setCurrentImageId(finalImages[localIdx].id);
     }
     
     // Lock in the rates and studio state to the DB and broadcast to all devices
@@ -353,6 +368,7 @@ export function useJewelryStudio() {
   const onUploadPhotos = async (files: FileList) => {
     if (files.length === 0 || isUploadingPhotos) return;
     setIsUploadingPhotos(true);
+    isUploadingPhotosRef.current = true;
     setUploadProgress(0);
 
     try {
@@ -417,6 +433,7 @@ export function useJewelryStudio() {
       showToast(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`, "error");
     } finally {
       setIsUploadingPhotos(false);
+      isUploadingPhotosRef.current = false;
       setUploadProgress(null);
     }
   };
@@ -426,10 +443,11 @@ export function useJewelryStudio() {
     setCurrentIndex(globalIdx);
     if (storedImages[localIndex]) {
       setCurrentImageUrl(storedImages[localIndex].url);
+      setCurrentImageId(storedImages[localIndex].id);
     }
   };
 
-  const handleDeleteImage = async (id: number) => {
+  const handleDeleteImage = async (id: number, options?: { silent?: boolean }) => {
     try {
       const wasSelected = storedImages.find(img => img.id === id)?.url === currentImageUrl;
       const res = await fetch(`${API_URL}/api/images/${id}`, { method: 'DELETE' });
@@ -452,26 +470,33 @@ export function useJewelryStudio() {
         const newTotal = Math.max(0, prev - 1);
         const newIdx = newTotal === 0 ? -1 : Math.min(currentIndex, newTotal - 1);
         setCurrentIndex(newIdx);
+        if (newIdx === -1) {
+          setCurrentImageId(undefined);
+        }
         
         if (wasSelected) {
           if (newIdx === -1) {
             setCurrentImageUrl(undefined);
+            setCurrentImageId(undefined);
           } else {
             // Sync with the image now at the same position (clamped)
             const localIdx = newIdx % imagesPerPage;
             if (initialImages[localIdx]) {
               setCurrentImageUrl(initialImages[localIdx].url);
+              setCurrentImageId(initialImages[localIdx].id);
             }
           }
         }
         return newTotal;
       });
       
-      showToast('Image Deleted', 'success');
+      if (!options?.silent) showToast('Image Deleted', 'success');
+      return true;
     } catch (err) {
       console.error("Delete failed:", err);
-      showToast('Delete Failed', 'error');
+      if (!options?.silent) showToast('Delete Failed', 'error');
       await refreshAssets(currentPageRef.current);
+      return false;
     }
   };
 
@@ -511,6 +536,7 @@ export function useJewelryStudio() {
   const handleReset = () => { 
     setCurrentIndex(-1); 
     setCurrentImageUrl(undefined);
+    setCurrentImageId(undefined);
     showToast('Selection reset', 'success'); 
   };
 
@@ -521,6 +547,7 @@ export function useJewelryStudio() {
     rates, setGoldPrice, setGold8Price, setSilverPrice,
     date, setDate,
     currentImage,
+    currentImageId,
     currentIndex, totalImages,
     storedImages,
     isLoadingImages, imageError,
