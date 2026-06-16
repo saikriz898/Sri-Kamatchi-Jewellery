@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_SERVER_URL || 'https://sri-kamatchi-jewellery-68kz.onrender.com'}/api/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_SERVER_URL || 'https://sri-kamatchi-jewellery-julx.onrender.com'}/api/:path*`,
       },
     ];
   },
